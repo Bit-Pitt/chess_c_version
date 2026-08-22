@@ -14,8 +14,23 @@
 #include <iostream>
 #include <stdexcept>
 
-ChessGUI::ChessGUI(Game& partita)
-    : partita(partita),
+void ChessGUI::aggiornaGUI() {
+
+    disegnaScacchiera();
+
+    for (const Posizione& pos : mossa) {
+        evidenziaCasella(pos);
+    }
+
+    disegnaPezzi();
+
+    if (partitaFinita) {
+        disegnaFinePartita();
+    }
+}
+
+
+ChessGUI::ChessGUI(Game& partita) : partita(partita), partitaFinita(false), vincitore(""),
       finestra(
           sf::VideoMode(DIMENSIONE_SCACCHIERA, DIMENSIONE_SCACCHIERA),
           "Scacchi"
@@ -39,15 +54,14 @@ void ChessGUI::run() {
                 finestra.close();
             }
 
-            if (evento.type == sf::Event::MouseButtonPressed) {
+            if (evento.type == sf::Event::MouseButtonPressed &&
+                evento.mouseButton.button == sf::Mouse::Left &&
+                !partitaFinita) {
 
-                if (evento.mouseButton.button == sf::Mouse::Left) {
-
-                    click(
-                        evento.mouseButton.x,
-                        evento.mouseButton.y
-                    );
-                }
+                click(
+                    evento.mouseButton.x,
+                    evento.mouseButton.y
+                );
             }
         }
 
@@ -57,18 +71,6 @@ void ChessGUI::run() {
 
         finestra.display();
     }
-}
-
-
-void ChessGUI::aggiornaGUI() {
-
-    disegnaScacchiera();
-
-    for (const Posizione& pos : mossa) {
-        evidenziaCasella(pos);
-    }
-
-    disegnaPezzi();
 }
 
 
@@ -100,6 +102,7 @@ void ChessGUI::disegnaScacchiera() {
     }
 }
 
+
 void ChessGUI::evidenziaCasella(Posizione pos) {
 
     int rigaGrafica = 7 - pos.riga;
@@ -117,20 +120,17 @@ void ChessGUI::evidenziaCasella(Posizione pos) {
     );
 
     evidenziata.setFillColor(sf::Color::Transparent);
-
     evidenziata.setOutlineColor(sf::Color::Red);
-
     evidenziata.setOutlineThickness(4);
 
     finestra.draw(evidenziata);
 }
 
+
 Posizione ChessGUI::convertiPixelPosizione(int x, int y) {
 
     int colonna = x / DIMENSIONE_CASELLA;
-
     int rigaGrafica = y / DIMENSIONE_CASELLA;
-
     int riga = 7 - rigaGrafica;
 
     return Posizione{riga, colonna};
@@ -160,13 +160,10 @@ void ChessGUI::disegnaPezzi() {
                 continue;
 
             sf::Sprite sprite;
-
             sprite.setTexture(it->second);
 
-            // Dimensioni effettive dell'immagine
             sf::Vector2u dimensioni = it->second.getSize();
 
-            // Centro dello sprite
             sprite.setOrigin(
                 dimensioni.x / 2.0f,
                 dimensioni.y / 2.0f
@@ -174,19 +171,19 @@ void ChessGUI::disegnaPezzi() {
 
             int rigaGrafica = 7 - r;
 
-            float x = c * DIMENSIONE_CASELLA
-                    + DIMENSIONE_CASELLA / 2.0f;
+            float x = c * DIMENSIONE_CASELLA +
+                      DIMENSIONE_CASELLA / 2.0f;
 
-            float y = rigaGrafica * DIMENSIONE_CASELLA
-                    + DIMENSIONE_CASELLA / 2.0f;
+            float y = rigaGrafica * DIMENSIONE_CASELLA +
+                      DIMENSIONE_CASELLA / 2.0f;
 
             sprite.setPosition(x, y);
 
             finestra.draw(sprite);
         }
- 
     }
 }
+
 
 void ChessGUI::creaImmagini() {
 
@@ -227,8 +224,8 @@ void ChessGUI::creaImmagini() {
         throw std::runtime_error("Impossibile caricare queen_white.png");
 }
 
-
 void ChessGUI::click(int x, int y) {
+
     Posizione pos = convertiPixelPosizione(x, y);
 
     std::cout << "Hai cliccato: "
@@ -238,7 +235,6 @@ void ChessGUI::click(int x, int y) {
 
     Scacchiera& scacchiera = partita.getBoard();
 
-    // Primo click: selezione del pezzo
     if (mossa.empty()) {
 
         Pezzo* pezzo = scacchiera.getPezzo(pos);
@@ -249,29 +245,32 @@ void ChessGUI::click(int x, int y) {
         }
 
         mossa.push_back(pos);
+
+        aggiornaGUI();
+
         return;
     }
 
-    // Secondo click
     if (mossa.size() == 1) {
 
-        // Se clicco di nuovo sulla stessa casella annullo la selezione
         if (mossa[0] == pos) {
             std::cout << "Selezione annullata.\n";
+
             mossa.clear();
+
+            aggiornaGUI();
+
             return;
         }
 
         mossa.push_back(pos);
 
-        std::string stringaMossa =
-            creaStringa(mossa, scacchiera);
+        std::string stringaMossa = creaStringa(mossa, scacchiera);
 
         std::vector<std::string> risultato =
             partita.processaMossa(stringaMossa);
 
-        if (!risultato.empty() &&
-            risultato[0] == "true") {
+        if (!risultato.empty() && risultato[0] == "true") {
 
             if (risultato.size() > 1 &&
                 risultato[1] == "Promozione") {
@@ -280,18 +279,93 @@ void ChessGUI::click(int x, int y) {
 
                 partita.promuovi();
             }
-        }
-        else {
-            std::cout << "Mossa non valida.\n";
-        }
 
-        // In ogni caso la prossima mossa parte da zero
-        mossa.clear();
+            mossa.clear();
+
+            aggiornaGUI();
+
+            std::vector<std::string> fine =
+                partita.checkFinePartita();
+
+            if (!fine.empty() && fine[0] == "true") {
+
+                mostraFinePartita(fine[1]);
+            }
+
+        } else {
+
+            std::cout << "Mossa non valida.\n";
+
+            mossa.clear();
+
+            aggiornaGUI();
+        }
     }
 }
 
 
+void ChessGUI::mostraFinePartita(const std::string& vincitore) {
 
+    partitaFinita = true;
+    this->vincitore = vincitore;
+    std::cout << "Vincitore: " << vincitore << "\n";
+}
+
+
+void ChessGUI::disegnaFinePartita() {
+
+    sf::RectangleShape overlay(
+        sf::Vector2f(
+            8 * DIMENSIONE_CASELLA,
+            8 * DIMENSIONE_CASELLA
+        )
+    );
+
+    overlay.setPosition(0, 0);
+    overlay.setFillColor(sf::Color(0, 0, 0, 180));
+
+    finestra.draw(overlay);
+
+    std::string testo;
+
+    if (vincitore == "WHITE") {
+        testo = "Vincitore: Player White";
+    }
+    else if (vincitore == "BLACK") {
+        testo = "Vincitore: Player Black";
+    }
+    else {
+        testo = "Partita finita in patta";
+    }
+
+    sf::Font font;
+
+    if (!font.loadFromFile("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")) {
+        std::cerr << "Errore: font non trovato\n";
+        return;
+    }
+
+    sf::Text testoGrafico;
+
+    testoGrafico.setFont(font);
+    testoGrafico.setString(testo);
+    testoGrafico.setCharacterSize(40);
+    testoGrafico.setFillColor(sf::Color::White);
+
+    sf::FloatRect bounds = testoGrafico.getLocalBounds();
+
+    testoGrafico.setOrigin(
+        bounds.left + bounds.width / 2.0f,
+        bounds.top + bounds.height / 2.0f
+    );
+
+    testoGrafico.setPosition(
+        4 * DIMENSIONE_CASELLA,
+        4 * DIMENSIONE_CASELLA
+    );
+
+    finestra.draw(testoGrafico);
+}
 
 char getIniziale(Pezzo* pezzo) {
     if (pezzo == nullptr)

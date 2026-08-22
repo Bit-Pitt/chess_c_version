@@ -30,8 +30,7 @@ bool muovi(Scacchiera& scacchiera, TipoPezzo nome, Posizione csrc, Posizione cde
 
 
     // Calcolo tutte le destinazioni valide del pezzo
-    std::vector<Posizione> possibiliDest =
-        getPossibleDestination(scacchiera, pezzo, csrc, giocatore);
+    std::vector<Posizione> possibiliDest = getPossibleDestination(scacchiera, pezzo, csrc, giocatore);
 
 
     // ========================================================
@@ -39,7 +38,7 @@ bool muovi(Scacchiera& scacchiera, TipoPezzo nome, Posizione csrc, Posizione cde
     // ========================================================
 
     if (nome == TipoPezzo::KING) {
-
+        std::cout<< "CONTROLLO SE ARROCCO";
         Posizione posizioneRe = scacchiera.getPosRe(giocatore);
 
         // Il re deve essere effettivamente nella sua posizione
@@ -48,9 +47,7 @@ bool muovi(Scacchiera& scacchiera, TipoPezzo nome, Posizione csrc, Posizione cde
 
         // Le destinazioni 2 e 6 sono quelle dell'arrocco
         // rispetto alla riga del re.
-        bool possibileArrocco =
-            (cdest == Posizione{csrc.riga, 6} ||
-             cdest == Posizione{csrc.riga, 2});
+        bool possibileArrocco = (cdest == Posizione{csrc.riga, 6} || cdest == Posizione{csrc.riga, 2});
 
         if (posizioneIniziale && possibileArrocco) {
 
@@ -226,6 +223,7 @@ void startGame(Scacchiera& scacchiera) {
 
                         Posizione cdest = stringToPos(destStringa);
 
+                        std::cout<<"DEBUG: EFFETTUO MOSSA";
                         validMove = muovi(scacchiera, nome, csrc, cdest, giocatoreDiTurno);
                     }
                     catch (const std::exception& e) {

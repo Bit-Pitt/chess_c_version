@@ -109,8 +109,11 @@ std::vector<std::string> Game::checkFinePartita() {
 
     return {"false"};
 }
-std::vector<std::string> Game::muovi( Scacchiera& scacchiera,TipoPezzo nome,Posizione csrc,Posizione cdest,Colore giocatore,std::vector<Pezzo*>& pezziPersi
-) {
+
+
+std::vector<std::string> Game::muovi( Scacchiera& scacchiera,TipoPezzo nome,Posizione csrc,Posizione cdest,Colore giocatore,std::vector<Pezzo*>& pezziPersi) {
+    std::cout<<"DEBUG: EFFETTUO MOSSA";
+
     Pezzo* piece = scacchiera.getPezzo(csrc);
 
     if (piece == nullptr ||
@@ -119,14 +122,12 @@ std::vector<std::string> Game::muovi( Scacchiera& scacchiera,TipoPezzo nome,Posi
         return {"false"};
     }
 
-    std::vector<Posizione> possibiliDest =
-        getPossibleDestination(scacchiera, piece, csrc, giocatore);
+    std::vector<Posizione> possibiliDest = getPossibleDestination(scacchiera, piece, csrc, giocatore);
 
     // Controllo speciale: arrocco
     
     if (isArrocco(scacchiera, cdest, giocatore)) {
-        if (std::find(possibiliDest.begin(), possibiliDest.end(), cdest)
-                != possibiliDest.end()) {
+        if (std::find(possibiliDest.begin(), possibiliDest.end(), cdest) != possibiliDest.end()) {
 
             effettuaArrocco(scacchiera, cdest);
             return {"true"};

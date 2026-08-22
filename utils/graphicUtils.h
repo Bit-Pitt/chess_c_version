@@ -3,9 +3,17 @@
 
 #include <string>
 #include <vector>
+#include <map>
+
+#include <SFML/Graphics.hpp>
 
 #include "../Types.h"
 #include "../gameLogic/GameClass.h"
+
+
+// =========================================================
+// FUNZIONI DI UTILITÀ
+// =========================================================
 
 class Pezzo;
 class Scacchiera;
@@ -30,15 +38,13 @@ bool controllaInput(const std::vector<std::string>& mossa);
 
 std::string getNomeImmagine(Pezzo* pezzo);
 
-#pragma once
 
-#include <SFML/Graphics.hpp>
-#include <map>
-#include <string>
-#include <vector>
-
+// =========================================================
+// CLASSE GUI
+// =========================================================
 
 class ChessGUI {
+
 private:
 
     static constexpr int DIMENSIONE_CASELLA = 100;
@@ -52,11 +58,17 @@ private:
 
     std::map<std::string, sf::Texture> immagini;
 
+    bool partitaFinita;
+
+    std::string vincitore;
+
+
 public:
 
     ChessGUI(Game& partita);
 
     void run();
+
 
 private:
 
@@ -65,6 +77,8 @@ private:
     void disegnaScacchiera();
 
     void disegnaPezzi();
+
+    void disegnaFinePartita();
 
     void evidenziaCasella(Posizione pos);
 

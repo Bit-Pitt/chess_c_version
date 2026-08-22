@@ -85,6 +85,7 @@ std::vector<Posizione> caseInLinea(Posizione posRe, Posizione posScacco) {
     return pos;
 }
 
+
 bool mattoDaSingoloScacco(Scacchiera& scacchiera, Colore giocatore, const InfoScacchi& info) {
     Posizione posRe = scacchiera.getPosRe(giocatore);
     Pezzo* re = scacchiera.getPezzo(posRe);
@@ -93,7 +94,7 @@ bool mattoDaSingoloScacco(Scacchiera& scacchiera, Colore giocatore, const InfoSc
         return false;
 
     Posizione posScacco = info.posizioniScacco[0];
-    std::vector<Posizione> controllate = caseControllateDaGiocatore(scacchiera, giocatore, true);
+    std::vector<Posizione> controllate = caseControllateDaGiocatore(scacchiera, giocatore, false, giocatore  , true );
 
     if (std::find(controllate.begin(), controllate.end(), posScacco) != controllate.end())
         return false;
@@ -108,6 +109,177 @@ bool mattoDaSingoloScacco(Scacchiera& scacchiera, Colore giocatore, const InfoSc
             if (std::find(raggiungibili.begin(), raggiungibili.end(), pos) != raggiungibili.end())
                 return false;
     }
+
+    return true;
+}
+
+
+
+bool mattoDaSingoloScacco_debug(Scacchiera& scacchiera, Colore giocatore, const InfoScacchi& info) {
+
+    const bool debug = true;
+
+    Posizione posRe = scacchiera.getPosRe(giocatore);
+    Pezzo* re = scacchiera.getPezzo(posRe);
+
+    if (debug) {
+        std::cout << "\n========== DEBUG mattoDaSingoloScacco ==========\n";
+        std::cout << "Giocatore: " << (giocatore == Colore::WHITE ? "WHITE" : "BLACK") << "\n";
+        std::cout << "Posizione re: (" << posRe.riga << ", " << posRe.colonna << ")\n";
+        std::cout << "Posizione scacco: (" << info.posizioniScacco[0].riga << ", " << info.posizioniScacco[0].colonna << ")\n";
+    }
+
+    // =========================================================
+    // 1. Il re deve essere impossibilitato a muoversi
+    // =========================================================
+
+    std::vector<Posizione> destinazioniRe = re->destinations(scacchiera, posRe, giocatore);
+
+    if (debug) {
+        std::cout << "[DEBUG] Destinazioni possibili del re: "
+                  << destinazioniRe.size() << "\n";
+
+        for (const Posizione& pos : destinazioniRe)
+            std::cout << "        (" << pos.riga << ", " << pos.colonna << ")\n";
+    }
+
+    if (!destinazioniRe.empty()) {
+
+        if (debug)
+            std::cout << "[DEBUG] Il re può muoversi -> NON è matto\n";
+
+        return false;
+    }
+
+    if (debug)
+        std::cout << "[DEBUG] Il re non ha destinazioni -> continuo controllo matto\n";
+
+
+    // =========================================================
+    // 2. Controlliamo se è possibile catturare l'attaccante
+    // =========================================================
+
+    Posizione posScacco = info.posizioniScacco[0];
+
+    std::vector<Posizione> controllate = caseControllateDaGiocatore(scacchiera, giocatore, false, giocatore  , true );
+
+    if (debug) {
+        std::cout << "[DEBUG] Case controllate dal giocatore:\n";
+
+        for (const Posizione& pos : controllate)
+            std::cout << "        (" << pos.riga << ", " << pos.colonna << ")\n";
+
+        std::cout << "[DEBUG] Controllo se la posizione dello scacco è raggiungibile: ";
+
+        if (std::find(controllate.begin(), controllate.end(), posScacco) != controllate.end())
+            std::cout << "SI\n";
+        else
+            std::cout << "NO\n";
+    }
+
+    if (std::find(controllate.begin(), controllate.end(), posScacco) != controllate.end()) {
+
+        if (debug)
+            std::cout << "[DEBUG] L'attaccante può essere catturato -> NON è matto\n";
+
+        return false;
+    }
+
+
+    // =========================================================
+    // 3. Controlliamo l'attaccante
+    // =========================================================
+
+    Pezzo* attaccante = scacchiera.getPezzo(posScacco);
+
+    if (attaccante == nullptr) {
+
+        if (debug)
+            std::cout << "[DEBUG] ERRORE: nessun pezzo nella posizione dello scacco\n";
+
+        return false;
+    }
+
+    if (debug) {
+        std::cout << "[DEBUG] Tipo attaccante: ";
+
+        switch (attaccante->getTipo()) {
+            case TipoPezzo::PAWN:
+                std::cout << "PEDONE\n";
+                break;
+            case TipoPezzo::ROOK:
+                std::cout << "TORRE\n";
+                break;
+            case TipoPezzo::KNIGHT:
+                std::cout << "CAVALLO\n";
+                break;
+            case TipoPezzo::BISHOP:
+                std::cout << "ALFIERE\n";
+                break;
+            case TipoPezzo::QUEEN:
+                std::cout << "REGINA\n";
+                break;
+            case TipoPezzo::KING:
+                std::cout << "RE\n";
+                break;
+        }
+    }
+
+
+    // =========================================================
+    // 4. Se NON è un cavallo, controlliamo se possiamo
+    //    interporre un pezzo tra attaccante e re
+    // =========================================================
+
+    if (attaccante->getTipo() != TipoPezzo::KNIGHT) {
+
+        std::vector<Posizione> raggiungibili = caseRaggiungibiliDaGiocatore(scacchiera, giocatore, true);
+
+        std::vector<Posizione> inMezzo = caseInLinea(posRe, posScacco);
+
+        if (debug) {
+
+            std::cout << "[DEBUG] Case tra re e attaccante:\n";
+
+            for (const Posizione& pos : inMezzo)
+                std::cout << "        (" << pos.riga << ", " << pos.colonna << ")\n";
+
+            std::cout << "[DEBUG] Controllo se una di queste può essere raggiunta dal giocatore...\n";
+        }
+
+        for (const Posizione& pos : inMezzo) {
+
+            bool raggiungibile =
+                std::find(raggiungibili.begin(), raggiungibili.end(), pos) != raggiungibili.end();
+
+            if (debug) {
+                std::cout << "        (" << pos.riga << ", " << pos.colonna << ") -> "
+                          << (raggiungibile ? "RAGGIUNGIBILE" : "non raggiungibile")
+                          << "\n";
+            }
+
+            if (raggiungibile) {
+
+                if (debug)
+                    std::cout << "[DEBUG] È possibile interporre un pezzo -> NON è matto\n";
+
+                return false;
+            }
+        }
+    }
+    else {
+
+        if (debug)
+            std::cout << "[DEBUG] Attaccante = CAVALLO, quindi non è possibile interporre pezzi\n";
+    }
+
+
+    // =========================================================
+    // 5. Nessuna possibilità di salvarsi
+    // =========================================================
+
+    if (debug)
+        std::cout << "[DEBUG] NESSUNA POSSIBILITÀ DI SALVEZZA -> MATTO\n";
 
     return true;
 }
@@ -146,6 +318,7 @@ int partitaFinita(Scacchiera& scacchiera, Colore giocatore) {
 
     return 0;
 }
+
 
 std::vector<Posizione> getPossibleDestination(Scacchiera& scacchiera, Pezzo* pezzo, Posizione csrc, Colore giocatore) {
     InfoScacchi info = infoScacchi(scacchiera, giocatore);
@@ -351,6 +524,7 @@ void effettuaArrocco(Scacchiera& scacchiera, Posizione cdest) {
 
     // Arrocco corto Bianco
     if (cdest == Posizione{7, 6}) {
+        std::cout<<"EFFETTUATO ARROCCO CORTO";
         Pezzo* re = scacchiera.getPezzo({7, 4});
         Pezzo* torre = scacchiera.getPezzo({7, 7});
 
@@ -396,7 +570,7 @@ void effettuaArrocco(Scacchiera& scacchiera, Posizione cdest) {
 bool isArrocco(Scacchiera& scacchiera, Posizione cdest, Colore giocatore) {
     Posizione posRe = scacchiera.getPosRe(giocatore);
 
-    if (giocatore == Colore::WHITE) {
+    if (giocatore == Colore::BLACK) {
         return posRe == Posizione{7, 4} &&
                (cdest == Posizione{7, 6} || cdest == Posizione{7, 2});
     }

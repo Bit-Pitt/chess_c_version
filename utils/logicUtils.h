@@ -21,6 +21,8 @@ std::vector<Posizione> caseInLinea(Posizione posRe, Posizione posScacco);
 
 
 bool mattoDaSingoloScacco(const Scacchiera& scacchiera, Colore giocatore, const InfoScacchi& info);
+bool mattoDaSingoloScacco_debug(Scacchiera& scacchiera, Colore giocatore, const InfoScacchi& info);
+
 int partitaFinita(Scacchiera& scacchiera, Colore giocatore);
 std::vector<Posizione> getPossibleDestination(Scacchiera& scacchiera, Pezzo* pezzo, Posizione csrc, Colore giocatore);
 
