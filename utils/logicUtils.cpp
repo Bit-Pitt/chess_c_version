@@ -346,26 +346,62 @@ std::vector<Posizione> caseRaggiungibiliDaGiocatore(Scacchiera& scacchiera, Colo
 }
 
 
-void effettuaArrocco(Scacchiera& scacchiera, const Posizione& cdest) {
-    if (cdest == Posizione{7,6}) {
-        Pezzo* re = scacchiera.getPezzo({7,4});
-        Pezzo* torre = scacchiera.getPezzo({7,7});
-        re->sposta(scacchiera,{7,4},cdest);
-        torre->sposta(scacchiera,{7,7},{7,5});
-    } else if (cdest == Posizione{7,2}) {
-        Pezzo* re = scacchiera.getPezzo({7,4});
-        Pezzo* torre = scacchiera.getPezzo({7,0});
-        re->sposta(scacchiera,{7,4},cdest);
-        torre->sposta(scacchiera,{7,0},{7,3});
-    } else if (cdest == Posizione{0,6}) {
-        Pezzo* re = scacchiera.getPezzo({0,4});
-        Pezzo* torre = scacchiera.getPezzo({0,7});
-        re->sposta(scacchiera,{0,4},cdest);
-        torre->sposta(scacchiera,{0,7},{0,5});
-    } else if (cdest == Posizione{0,2}) {
-        Pezzo* re = scacchiera.getPezzo({0,4});
-        Pezzo* torre = scacchiera.getPezzo({0,0});
-        re->sposta(scacchiera,{0,4},cdest);
-        torre->sposta(scacchiera,{0,0},{0,3});
-    } else throw std::runtime_error("Destinazione arrocco non valida");
+
+
+void effettuaArrocco(Scacchiera& scacchiera, Posizione cdest) {
+
+    // Arrocco corto Bianco
+    if (cdest == Posizione{7, 6}) {
+        Pezzo* re = scacchiera.getPezzo({7, 4});
+        Pezzo* torre = scacchiera.getPezzo({7, 7});
+
+        re->sposta(scacchiera, {7, 4}, {7, 6});
+        torre->sposta(scacchiera, {7, 7}, {7, 5});
+    }
+
+    // Arrocco lungo Bianco
+    else if (cdest == Posizione{7, 2}) {
+        Pezzo* re = scacchiera.getPezzo({7, 4});
+        Pezzo* torre = scacchiera.getPezzo({7, 0});
+
+        re->sposta(scacchiera, {7, 4}, {7, 2});
+        torre->sposta(scacchiera, {7, 0}, {7, 3});
+    }
+
+    // Arrocco corto Nero
+    else if (cdest == Posizione{0, 6}) {
+        Pezzo* re = scacchiera.getPezzo({0, 4});
+        Pezzo* torre = scacchiera.getPezzo({0, 7});
+
+        re->sposta(scacchiera, {0, 4}, {0, 6});
+        torre->sposta(scacchiera, {0, 7}, {0, 5});
+    }
+
+    // Arrocco lungo Nero
+    else if (cdest == Posizione{0, 2}) {
+        Pezzo* re = scacchiera.getPezzo({0, 4});
+        Pezzo* torre = scacchiera.getPezzo({0, 0});
+
+        re->sposta(scacchiera, {0, 4}, {0, 2});
+        torre->sposta(scacchiera, {0, 0}, {0, 3});
+    }
+
+    else {
+        throw std::runtime_error(
+            "Chiamato arrocco con destinazione non valida"
+        );
+    }
+}
+
+
+bool isArrocco(Scacchiera& scacchiera, Posizione cdest, Colore giocatore) {
+    Posizione posRe = scacchiera.getPosRe(giocatore);
+
+    if (giocatore == Colore::WHITE) {
+        return posRe == Posizione{7, 4} &&
+               (cdest == Posizione{7, 6} || cdest == Posizione{7, 2});
+    }
+
+    return posRe == Posizione{0, 4} &&
+           (cdest == Posizione{0, 6} || cdest == Posizione{0, 2});
 }

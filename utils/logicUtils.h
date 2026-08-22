@@ -35,3 +35,5 @@ void debugPrintCaselle(const std::vector<Posizione>& positions, const std::strin
 std::vector<Posizione> caseControllateDaGiocatore(Scacchiera& scacchiera, Colore giocatore, bool togliRe = false, Colore coloreRe = Colore::WHITE, bool nonConsiderareRe = false);
 std::vector<Posizione> caseRaggiungibiliDaGiocatore(Scacchiera& scacchiera, Colore giocatore, bool nonConsiderareRe = true);
 void effettuaArrocco(Scacchiera& scacchiera, Posizione cdest);
+
+bool isArrocco(Scacchiera& scacchiera, Posizione cdest, Colore giocatore);

@@ -22,13 +22,17 @@ std::vector<Posizione> Re::destinations(Scacchiera& scacchiera, Posizione csrc, 
 
     Colore avversario = (giocatore == Colore::WHITE) ? Colore::BLACK : Colore::WHITE;
 
-    std::vector<Posizione> controllateAvversario = caseControllateDaGiocatore(scacchiera, avversario, true, giocatore);
+    std::vector<Posizione> controllateAvversario =
+        caseControllateDaGiocatore(scacchiera, avversario, true, giocatore);
 
     dest.erase(std::remove_if(dest.begin(), dest.end(), [&](const Posizione& pos) {
-        return std::find(controllateAvversario.begin(), controllateAvversario.end(), pos) != controllateAvversario.end();
+        return std::find(controllateAvversario.begin(), controllateAvversario.end(), pos)
+               != controllateAvversario.end();
     }), dest.end());
 
-    std::vector<Posizione> arroccoDest = arrocco(scacchiera, csrc, giocatore, controllateAvversario);
+    std::vector<Posizione> arroccoDest =
+        arrocco(scacchiera, csrc, giocatore, controllateAvversario);
+
     dest.insert(dest.end(), arroccoDest.begin(), arroccoDest.end());
 
     return dest;
