@@ -32,15 +32,17 @@ struct Posizione {
     }
 };
 
+enum class TipoMossa {
+    NORMALE,
+    ARROCCO
+};
+
 struct Mossa {
     Posizione posizione;
     TipoMossa tipo;
 };
 
-enum class TipoMossa {
-    NORMALE,
-    ARROCCO
-};
+
 
 
 enum class Direzione { AVANTI_SX, AVANTI_DX, INDIETRO_SX, INDIETRO_DX };

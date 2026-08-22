@@ -70,7 +70,7 @@ bool muovi(Scacchiera& scacchiera, TipoPezzo nome, Posizione csrc, Posizione cde
 
     if (std::find(possibiliDest.begin(), possibiliDest.end(), cdest) != possibiliDest.end()) {
 
-        RisultatoMossa risultato = pezzo->sposta(scacchiera, csrc, cdest);
+        pezzo->sposta(scacchiera, csrc, cdest);
 
         // Il risultato della sposta ci serve solamente per
         // sapere se il pedone deve essere promosso.

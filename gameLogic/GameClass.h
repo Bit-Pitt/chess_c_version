@@ -1,7 +1,7 @@
 #pragma once
 
 #include "../chessboard/scacchiera.h"
-#include "Types.h"
+#include "../Types.h"
 #include "../utils/logicUtils.h"
 
 #include <vector>

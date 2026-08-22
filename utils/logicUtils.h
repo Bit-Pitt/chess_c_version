@@ -2,6 +2,7 @@
 
 #include <vector>
 #include "../Types.h"
+#include <string>
 
 class Pezzo;
 class Scacchiera;
@@ -15,13 +16,13 @@ struct InfoScacchi {
     std::vector<Posizione> posizioniScacco;
 };
 
-InfoScacchi infoScacchi(const Scacchiera& scacchiera, Colore giocatore);
+InfoScacchi infoScacchi(Scacchiera& scacchiera, Colore giocatore);
 std::vector<Posizione> caseInLinea(Posizione posRe, Posizione posScacco);
 
 
 bool mattoDaSingoloScacco(const Scacchiera& scacchiera, Colore giocatore, const InfoScacchi& info);
-int partitaFinita(const Scacchiera& scacchiera, Colore giocatore);
-std::vector<Posizione> getPossibleDestination(const Scacchiera& scacchiera, Pezzo* pezzo, Posizione csrc, Colore giocatore);
+int partitaFinita(Scacchiera& scacchiera, Colore giocatore);
+std::vector<Posizione> getPossibleDestination(Scacchiera& scacchiera, Pezzo* pezzo, Posizione csrc, Colore giocatore);
 
 
 bool pezzoNemico(Pezzo* pezzo, Colore giocatore);

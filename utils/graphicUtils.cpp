@@ -163,21 +163,30 @@ void ChessGUI::disegnaPezzi() {
 
             sprite.setTexture(it->second);
 
-            int rigaGrafica = 7 - r;
+            // Dimensioni effettive dell'immagine
+            sf::Vector2u dimensioni = it->second.getSize();
 
-            sprite.setPosition(
-                c * DIMENSIONE_CASELLA,
-                rigaGrafica * DIMENSIONE_CASELLA
+            // Centro dello sprite
+            sprite.setOrigin(
+                dimensioni.x / 2.0f,
+                dimensioni.y / 2.0f
             );
 
-            // Se le immagini hanno dimensioni diverse da 100x100
-            // possiamo scalarle successivamente.
+            int rigaGrafica = 7 - r;
+
+            float x = c * DIMENSIONE_CASELLA
+                    + DIMENSIONE_CASELLA / 2.0f;
+
+            float y = rigaGrafica * DIMENSIONE_CASELLA
+                    + DIMENSIONE_CASELLA / 2.0f;
+
+            sprite.setPosition(x, y);
 
             finestra.draw(sprite);
         }
+ 
     }
 }
-
 
 void ChessGUI::creaImmagini() {
 
@@ -220,7 +229,6 @@ void ChessGUI::creaImmagini() {
 
 
 void ChessGUI::click(int x, int y) {
-
     Posizione pos = convertiPixelPosizione(x, y);
 
     std::cout << "Hai cliccato: "
@@ -228,12 +236,36 @@ void ChessGUI::click(int x, int y) {
               << pos.colonna
               << "\n";
 
-    mossa.push_back(pos);
+    Scacchiera& scacchiera = partita.getBoard();
 
-    if (mossa.size() == 2) {
+    // Primo click: selezione del pezzo
+    if (mossa.empty()) {
+
+        Pezzo* pezzo = scacchiera.getPezzo(pos);
+
+        if (pezzo == nullptr) {
+            std::cout << "Casella vuota: seleziona un pezzo.\n";
+            return;
+        }
+
+        mossa.push_back(pos);
+        return;
+    }
+
+    // Secondo click
+    if (mossa.size() == 1) {
+
+        // Se clicco di nuovo sulla stessa casella annullo la selezione
+        if (mossa[0] == pos) {
+            std::cout << "Selezione annullata.\n";
+            mossa.clear();
+            return;
+        }
+
+        mossa.push_back(pos);
 
         std::string stringaMossa =
-            creaStringa(mossa, partita.getBoard());
+            creaStringa(mossa, scacchiera);
 
         std::vector<std::string> risultato =
             partita.processaMossa(stringaMossa);
@@ -249,7 +281,11 @@ void ChessGUI::click(int x, int y) {
                 partita.promuovi();
             }
         }
+        else {
+            std::cout << "Mossa non valida.\n";
+        }
 
+        // In ogni caso la prossima mossa parte da zero
         mossa.clear();
     }
 }

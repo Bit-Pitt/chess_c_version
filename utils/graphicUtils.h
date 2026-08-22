@@ -5,6 +5,7 @@
 #include <vector>
 
 #include "../Types.h"
+#include "../gameLogic/GameClass.h"
 
 class Pezzo;
 class Scacchiera;
@@ -26,6 +27,8 @@ void printPezziPersi(const std::vector<Pezzo*>& pezziPersi, Colore colore);
 bool controllaNome(Pezzo* pezzo, TipoPezzo tipo);
 
 bool controllaInput(const std::vector<std::string>& mossa);
+
+std::string getNomeImmagine(Pezzo* pezzo);
 
 #pragma once
 

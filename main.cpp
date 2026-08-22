@@ -14,7 +14,7 @@
 
 
 // Per avviare il game in modalità debug
-const bool DEBUG = true;
+const bool DEBUG = false;
 
 
 int main() {
@@ -111,7 +111,6 @@ int main() {
     }
 
 
-    delete &scacchiera;
 
     std::cout << "Grazie per aver giocato\n";
 

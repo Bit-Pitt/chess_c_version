@@ -1,8 +1,9 @@
 #include "scacchiera.h"
-#include "Regina.h"
+#include "../pieces/Regina.h"
 #include <iostream>
 #include <stdexcept>
 #include <iomanip>
+#include <string>
 
 Scacchiera::Scacchiera() {
     for (auto& riga : scacchiera)
@@ -87,4 +88,73 @@ void Scacchiera::promuovi() {
 
     Pezzo* pedone = getPezzo(casaPromo);
     aggiungiPezzo(new Regina(pedone->getColore()), casaPromo);
+}
+
+void Scacchiera::print() const {
+    std::cout << "\n\n";
+
+    const int spaziPerCasella = 6;
+
+    for (int i = 7; i >= 0; --i) {
+
+        std::cout << "---------------------------------------------------------\n";
+        std::cout << "|";
+
+        for (int j = 0; j < 8; ++j) {
+
+            Posizione pos{i, j};
+
+            std::string nome = nomePezzoInCasella(getPezzo(pos));
+
+            int spazi = spaziPerCasella - static_cast<int>(nome.length()) - 1;
+
+            if (j != 7)
+                std::cout << " " << nome << std::string(spazi, ' ') << "|";
+            else
+                std::cout << " " << nome << std::string(spazi, ' ') << "|\n";
+        }
+    }
+
+    std::cout << "---------------------------------------------------------\n";
+    std::cout << "\n\n";
+}
+
+std::string Scacchiera::nomePezzoInCasella(Pezzo* pezzo) const {
+    if (pezzo == nullptr)
+        return "";
+
+    std::string nome;
+
+    switch (pezzo->getTipo()) {
+        case TipoPezzo::PAWN:
+            nome = "P";
+            break;
+
+        case TipoPezzo::ROOK:
+            nome = "R";
+            break;
+
+        case TipoPezzo::KNIGHT:
+            nome = "C";
+            break;
+
+        case TipoPezzo::BISHOP:
+            nome = "B";
+            break;
+
+        case TipoPezzo::QUEEN:
+            nome = "Q";
+            break;
+
+        case TipoPezzo::KING:
+            nome = "K";
+            break;
+    }
+
+    if (pezzo->getColore() == Colore::WHITE)
+        nome += "W";
+    else
+        nome += "B";
+
+    return nome;
 }

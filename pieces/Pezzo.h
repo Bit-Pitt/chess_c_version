@@ -1,6 +1,7 @@
 #pragma once
 #include <vector>
 #include "../Types.h"
+#include "../utils/logicUtils.h"
 
 class Scacchiera;
 

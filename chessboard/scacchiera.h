@@ -2,7 +2,8 @@
 
 #include <array>
 #include <vector>
-#include "Pezzo.h"
+#include "../pieces/Pezzo.h"
+#include <string>
 
 class Scacchiera {
 private:
@@ -21,6 +22,7 @@ public:
     bool caselleValide(const std::vector<Posizione>& caselle) const;
 
     void print() const;
+    std::string nomePezzoInCasella(Pezzo* pezzo) const;
 
     Posizione getPosRe(Colore giocatore) const;
 

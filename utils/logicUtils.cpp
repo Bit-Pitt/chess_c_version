@@ -1,6 +1,6 @@
 #include "../chessboard/scacchiera.h"
 #include "../utils/logicUtils.h"
-#include "Pezzo.h"
+#include "../pieces/Pezzo.h"
 #include <stdexcept>
 #include <algorithm>
 #include <iostream>
@@ -237,7 +237,6 @@ std::vector<Posizione> movimentoOrizzontale(Scacchiera& scacchiera, Posizione cs
 std::vector<Posizione> movimentoRe(Scacchiera& scacchiera, Posizione csrc, Colore giocatore, bool destinazioni, bool caseControllate) {
     if (destinazioni && caseControllate) throw std::runtime_error("API chiamata incorrettamente");
     std::vector<Posizione> dest;
-    Pezzo* piece = scacchiera.getPezzo(csrc);
     for (int di = -1; di <= 1; ++di)
         for (int dj = -1; dj <= 1; ++dj)
             if (di != 0 || dj != 0) {
