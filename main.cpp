@@ -1,5 +1,5 @@
 #include <iostream>
-
+#include "utils/chessGUI.h"
 #include "chessboard/scacchiera.h"
 #include "gameNoGui/game.h"
 #include "pieces/Pedone.h"
@@ -11,6 +11,9 @@
 
 #include "gameLogic/GameClass.h"
 #include "utils/graphicUtils.h"
+
+#include <thread>
+#include "Sync.h"
 
 
 // Per avviare il game in modalità debug
@@ -103,9 +106,9 @@ int main() {
 
     } else {
         std::cout << "Scegli modalità di gioco:\n";
-        std::cout << "1) 2 giocatori\n";
-        std::cout << "2) 1 giocatore vs bot\n";
-        std::cout << "3) bot forte vs bot random\n";
+        std::cout << "1) Due giocatori\n";
+        std::cout << "2) Un giocatore vs bot\n";
+        std::cout << "3) Bot forte vs bot random\n";
 
         int scelta;
         std::cin >> scelta;
@@ -121,13 +124,33 @@ int main() {
         else {
             configurazione = {TipoGiocatore::BOT, TipoGiocatore::BOT};
         }
-
-       
+        
         Game partita(scacchiera, configurazione);
 
-        ChessGUI gui(partita);
+        SyncContext sync;
 
-        gui.run();
+
+        std::thread gameThread([&]() {
+            partita.run(sync);
+        });
+
+        
+        std::thread guiThread([&]() {
+            ChessGUI gui(partita, sync);
+            gui.run();
+        });
+
+
+        //In questo modo il thread main termina solo dopo il gui thread
+        guiThread.join();
+
+        // terminata la gui questo farà terminare il game thread (che se bloccato sveglio)
+        sync.running = false;
+        sem_post(&sync.inputReady);
+
+        gameThread.join();
+
+
     }
 
 

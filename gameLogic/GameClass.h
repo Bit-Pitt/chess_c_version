@@ -7,6 +7,8 @@
 #include <vector>
 #include <string>
 #include <memory>
+#include "../Sync.h"
+
 
 class Game {
 private:
@@ -64,7 +66,8 @@ public:
     std::vector<std::string> eseguiMossa(const std::string& mossaStringa);
     bool isPartitaFinita() const;
     std::string getVincitore() const;
-
+ 
+    void run(SyncContext& sync);
 
     void promuovi();
 };

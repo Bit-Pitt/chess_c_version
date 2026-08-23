@@ -1,5 +1,5 @@
 CXX = g++
-CXXFLAGS = -std=c++17  #-Wall -Wextra
+CXXFLAGS = -std=c++17   -pthread #-Wall -Wextra
 
 LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
@@ -17,7 +17,8 @@ SRC = main.cpp \
       utils/logicUtils.cpp \
       gameLogic/GameClass.cpp \
       gameNoGui/game.cpp \
-      bot/ChessBot.cpp
+      bot/ChessBot.cpp \
+      utils/chessGUI.cpp
 
 TARGET = scacchi
 

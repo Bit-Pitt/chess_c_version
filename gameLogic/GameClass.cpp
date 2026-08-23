@@ -230,3 +230,60 @@ std::string Game::getVincitore() const {
 
     return "";
 }
+
+
+
+
+void Game::run(SyncContext& sync) {
+
+    while (sync.running) {
+
+        sem_wait(&sync.inputReady);
+
+        if (!sync.running)
+            break;
+
+        ComandoMossa comando;
+
+        {
+            std::lock_guard<std::mutex> lock(sync.inputMutex);
+
+            if (sync.inputQueue.empty())
+                continue;
+
+            comando = sync.inputQueue.front();
+            sync.inputQueue.pop();
+        }
+
+        bool mossaValida = false;
+
+        try {
+
+            std::vector<Posizione> movimento = {
+                comando.src,
+                comando.dest
+            };
+
+            std::string stringaMossa = creaStringa(movimento, scacchiera);
+
+            std::vector<std::string> risultato = eseguiMossa(stringaMossa);
+            mossaValida = !risultato.empty() && risultato[0] == "true";
+
+        } catch (const std::exception& e) {
+
+            std::cerr << "[GAME THREAD] Errore: "
+                      << e.what()
+                      << "\n";
+        }
+
+        // passa snapshot alla GUI della scacchiera (costruttore copia!)
+        EventoGUI evento{ Scacchiera(scacchiera), mossaValida };  
+
+        {
+            std::lock_guard<std::mutex> lock(sync.outputMutex);
+            sync.outputQueue.push(std::move(evento));
+        }
+
+        sem_post(&sync.moveProcessed);      //sveglierà GUI thread
+    }
+}
