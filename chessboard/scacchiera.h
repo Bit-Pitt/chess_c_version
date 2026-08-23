@@ -12,6 +12,11 @@ private:
 public:
     Scacchiera();
 
+    //metodi per deepcopy
+    Scacchiera(const Scacchiera& altra);
+    Scacchiera& operator=(const Scacchiera& altra);
+    ~Scacchiera();
+
     bool casellaValida(Posizione pos) const;
     void aggiungiPezzo(Pezzo* pezzo, Posizione pos);
 

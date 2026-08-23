@@ -102,8 +102,28 @@ int main() {
         partitaNoGui(scacchiera);
 
     } else {
+        std::cout << "Scegli modalità di gioco:\n";
+        std::cout << "1) 2 giocatori\n";
+        std::cout << "2) 1 giocatore vs bot\n";
+        std::cout << "3) bot forte vs bot random\n";
 
-        Game partita(scacchiera);
+        int scelta;
+        std::cin >> scelta;
+
+
+        ConfigurazioneGiocatori configurazione;
+        if (scelta == 1) {
+            configurazione = {TipoGiocatore::UMANO, TipoGiocatore::UMANO};
+        }
+        else if (scelta == 2) {  //il giocatore è il bianco
+            configurazione = {TipoGiocatore::UMANO, TipoGiocatore::BOT};
+        }
+        else {
+            configurazione = {TipoGiocatore::BOT, TipoGiocatore::BOT};
+        }
+
+       
+        Game partita(scacchiera, configurazione);
 
         ChessGUI gui(partita);
 

@@ -51,3 +51,23 @@ enum class RisultatoMossa {
     NonPromozione,
     Promozione
 };
+
+
+enum class TipoGiocatore {
+    UMANO,
+    BOT
+};
+
+
+struct ConfigurazioneGiocatori {
+    TipoGiocatore bianco;
+    TipoGiocatore nero;
+};
+
+
+enum class StatoPartita {
+    IN_CORSO,
+    PATTA,
+    VINCE_BIANCO,
+    VINCE_NERO
+};

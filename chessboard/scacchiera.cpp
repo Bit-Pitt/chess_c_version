@@ -4,10 +4,24 @@
 #include <stdexcept>
 #include <iomanip>
 #include <string>
+#include "../pieces/Pedone.h"
+#include "../pieces/Torre.h"
+#include "../pieces/Re.h"
+#include "../pieces/Alfiere.h"
+#include "../pieces/Cavallo.h"
+#include "../pieces/Regina.h"
 
 Scacchiera::Scacchiera() {
     for (auto& riga : scacchiera)
         riga.fill(nullptr);
+}
+
+Scacchiera::~Scacchiera() {
+    for (auto& riga : scacchiera)
+        for (Pezzo*& pezzo : riga) {
+            delete pezzo;
+            pezzo = nullptr;
+        }
 }
 
 bool Scacchiera::casellaValida(Posizione pos) const {
@@ -157,4 +171,100 @@ std::string Scacchiera::nomePezzoInCasella(Pezzo* pezzo) const {
         nome += "B";
 
     return nome;
+}
+
+// Construttore deep copy
+Scacchiera::Scacchiera(const Scacchiera& altra) {
+    for (auto& riga : scacchiera)
+        riga.fill(nullptr);
+
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+
+            Pezzo* pezzo = altra.scacchiera[i][j];
+
+            if (pezzo == nullptr)
+                continue;
+
+            Posizione pos{i, j};
+
+            switch (pezzo->getTipo()) {
+                case TipoPezzo::PAWN:
+                    aggiungiPezzo(new Pedone(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::ROOK:
+                    aggiungiPezzo(new Torre(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::KNIGHT:
+                    aggiungiPezzo(new Cavallo(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::BISHOP:
+                    aggiungiPezzo(new Alfiere(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::QUEEN:
+                    aggiungiPezzo(new Regina(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::KING:
+                    aggiungiPezzo(new Re(pezzo->getColore()), pos);
+                    break;
+            }
+        }
+    }
+}
+
+
+Scacchiera& Scacchiera::operator=(const Scacchiera& altra) {
+    if (this == &altra)
+        return *this;
+
+    for (auto& riga : scacchiera)
+        for (Pezzo*& pezzo : riga) {
+            delete pezzo;
+            pezzo = nullptr;
+        }
+
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+
+            Pezzo* pezzo = altra.scacchiera[i][j];
+
+            if (pezzo == nullptr)
+                continue;
+
+            Posizione pos{i, j};
+
+            switch (pezzo->getTipo()) {
+                case TipoPezzo::PAWN:
+                    aggiungiPezzo(new Pedone(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::ROOK:
+                    aggiungiPezzo(new Torre(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::KNIGHT:
+                    aggiungiPezzo(new Cavallo(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::BISHOP:
+                    aggiungiPezzo(new Alfiere(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::QUEEN:
+                    aggiungiPezzo(new Regina(pezzo->getColore()), pos);
+                    break;
+
+                case TipoPezzo::KING:
+                    aggiungiPezzo(new Re(pezzo->getColore()), pos);
+                    break;
+            }
+        }
+    }
+
+    return *this;
 }

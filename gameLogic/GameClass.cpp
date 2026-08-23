@@ -8,10 +8,19 @@
 #include <stdexcept>
 
 
-Game::Game(Scacchiera& scacchiera) : scacchiera(scacchiera) {
+
+
+Game::Game(Scacchiera& scacchiera, ConfigurazioneGiocatori configurazione) : scacchiera(scacchiera), tipoBianco(configurazione.bianco), tipoNero(configurazione.nero) {
+    if (tipoBianco == TipoGiocatore::BOT)
+        botBianco = std::make_unique<ChessBot>(this->scacchiera, 0.05);
+
+    if (tipoNero == TipoGiocatore::BOT) {
+        double epsilon = (tipoBianco == TipoGiocatore::BOT) ? 1.0 : 0.05;
+        botNero = std::make_unique<ChessBot>(this->scacchiera, epsilon);
+    }
+
     creaFilePartita();
 }
-
 
 void Game::creaFilePartita() {
     std::ofstream file("ultimo_game.txt");
@@ -84,35 +93,9 @@ std::vector<std::string> Game::processaMossa(const std::string& mossaStringa) {
 }
 
 
-std::vector<std::string> Game::checkFinePartita() {
-    int res = partitaFinita(scacchiera, turno);
-
-    if (res == 1) {
-        std::cout << "Patta\n";
-        return {"true", "PATTA"};
-    }
-
-    if (res == 2) {
-        Colore vincitore = (turno == g1) ? g2 : g1;
-
-        std::cout << "Vince: ";
-
-        if (vincitore == Colore::WHITE) {
-            std::cout << "WHITE\n";
-            return {"true", "WHITE"};
-        }
-        else {
-            std::cout << "BLACK\n";
-            return {"true", "BLACK"};
-        }
-    }
-
-    return {"false"};
-}
 
 
 std::vector<std::string> Game::muovi( Scacchiera& scacchiera,TipoPezzo nome,Posizione csrc,Posizione cdest,Colore giocatore,std::vector<Pezzo*>& pezziPersi) {
-    std::cout<<"DEBUG: EFFETTUO MOSSA";
 
     Pezzo* piece = scacchiera.getPezzo(csrc);
 
@@ -153,4 +136,97 @@ std::vector<std::string> Game::muovi( Scacchiera& scacchiera,TipoPezzo nome,Posi
 
 void Game::promuovi() {
     scacchiera.promuovi();
+}
+
+Colore Game::getTurno(){
+    return turno;
+}
+
+MossaBot Game::ottieniMossa(Colore giocatore) {
+    if (!isBot(giocatore))
+        throw std::runtime_error("Il giocatore non è un bot");
+
+    if (giocatore == Colore::WHITE)
+        return botBianco->scegliMossa(giocatore);
+
+    return botNero->scegliMossa(giocatore);
+}
+
+
+
+void Game::eseguiMossaBot(const MossaBot& mossa) {
+    std::vector<Posizione> movimento = {mossa.src, mossa.dest};
+    std::string stringaMossa = creaStringa(movimento, scacchiera);
+
+    std::cout << "[BOT] Mossa scelta: " << stringaMossa << "\n";
+
+    std::vector<std::string> risultato = eseguiMossa(stringaMossa);
+
+    if (risultato.empty() || risultato[0] != "true")
+        throw std::runtime_error("Il bot ha generato una mossa non valida");
+}
+
+bool Game::isBot(Colore giocatore) const {
+    if (giocatore == Colore::WHITE)
+        return tipoBianco == TipoGiocatore::BOT;
+
+    return tipoNero == TipoGiocatore::BOT;
+}
+
+
+std::vector<std::string> Game::checkFinePartita() {
+    int res = partitaFinita(scacchiera, turno);
+
+    if (res == 1) {
+        statoPartita = StatoPartita::PATTA;
+        return {"true", "PATTA"};
+    }
+
+    if (res == 2) {
+        Colore vincitore = (turno == g1) ? g2 : g1;
+
+        if (vincitore == Colore::WHITE)
+            statoPartita = StatoPartita::VINCE_BIANCO;
+        else
+            statoPartita = StatoPartita::VINCE_NERO;
+
+        return { "true", vincitore == Colore::WHITE ? "WHITE" : "BLACK" };
+    }
+
+    return {"false"};
+}
+
+
+std::vector<std::string> Game::eseguiMossa(const std::string& mossaStringa) {
+    std::vector<std::string> risultato = processaMossa(mossaStringa);
+
+    if (risultato.empty() || risultato[0] != "true")
+        return risultato;
+
+    if (risultato.size() > 1 && risultato[1] == "Promozione")
+        promuovi();
+
+    std::vector<std::string> fine = checkFinePartita();
+
+    if (!fine.empty() && fine[0] == "true")
+        return fine;
+
+    return risultato;
+}
+
+bool Game::isPartitaFinita() const {
+    return statoPartita != StatoPartita::IN_CORSO;
+}
+
+std::string Game::getVincitore() const {
+    if (statoPartita == StatoPartita::VINCE_BIANCO)
+        return "WHITE";
+
+    if (statoPartita == StatoPartita::VINCE_NERO)
+        return "BLACK";
+
+    if (statoPartita == StatoPartita::PATTA)
+        return "PATTA";
+
+    return "";
 }

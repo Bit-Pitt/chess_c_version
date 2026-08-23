@@ -9,7 +9,8 @@
 #include <iostream>
 #include <stdexcept>
 #include <cctype>
-
+#include <thread>
+#include <chrono>
 
 #include <iostream>
 #include <stdexcept>
@@ -43,36 +44,39 @@ ChessGUI::ChessGUI(Game& partita) : partita(partita), partitaFinita(false), vinc
 
 
 void ChessGUI::run() {
-
     while (finestra.isOpen()) {
+
+        if (!partitaFinita && partita.isBot(partita.getTurno())) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+
+            MossaBot mossaBot = partita.ottieniMossa(partita.getTurno());
+            partita.eseguiMossaBot(mossaBot);
+
+            if (partita.isPartitaFinita())
+                mostraFinePartita(partita.getVincitore());
+        }
 
         sf::Event evento;
 
         while (finestra.pollEvent(evento)) {
 
-            if (evento.type == sf::Event::Closed) {
+            if (evento.type == sf::Event::Closed)
                 finestra.close();
-            }
 
             if (evento.type == sf::Event::MouseButtonPressed &&
                 evento.mouseButton.button == sf::Mouse::Left &&
-                !partitaFinita) {
+                !partitaFinita &&
+                !partita.isBot(partita.getTurno())) {
 
-                click(
-                    evento.mouseButton.x,
-                    evento.mouseButton.y
-                );
+                click(evento.mouseButton.x, evento.mouseButton.y);
             }
         }
 
         finestra.clear();
-
         aggiornaGUI();
-
         finestra.display();
     }
 }
-
 
 void ChessGUI::disegnaScacchiera() {
 
@@ -225,18 +229,10 @@ void ChessGUI::creaImmagini() {
 }
 
 void ChessGUI::click(int x, int y) {
-
     Posizione pos = convertiPixelPosizione(x, y);
-
-    std::cout << "Hai cliccato: "
-              << pos.riga << " "
-              << pos.colonna
-              << "\n";
-
     Scacchiera& scacchiera = partita.getBoard();
 
     if (mossa.empty()) {
-
         Pezzo* pezzo = scacchiera.getPezzo(pos);
 
         if (pezzo == nullptr) {
@@ -245,61 +241,35 @@ void ChessGUI::click(int x, int y) {
         }
 
         mossa.push_back(pos);
-
         aggiornaGUI();
-
         return;
     }
 
     if (mossa.size() == 1) {
 
         if (mossa[0] == pos) {
-            std::cout << "Selezione annullata.\n";
-
             mossa.clear();
-
             aggiornaGUI();
-
             return;
         }
 
         mossa.push_back(pos);
 
         std::string stringaMossa = creaStringa(mossa, scacchiera);
+        std::vector<std::string> risultato = partita.eseguiMossa(stringaMossa);
 
-        std::vector<std::string> risultato =
-            partita.processaMossa(stringaMossa);
+        mossa.clear();
 
-        if (!risultato.empty() && risultato[0] == "true") {
-
-            if (risultato.size() > 1 &&
-                risultato[1] == "Promozione") {
-
-                std::cout << "PROMOZIONE AUTOMATICA A REGINA\n";
-
-                partita.promuovi();
-            }
-
-            mossa.clear();
-
-            aggiornaGUI();
-
-            std::vector<std::string> fine =
-                partita.checkFinePartita();
-
-            if (!fine.empty() && fine[0] == "true") {
-
-                mostraFinePartita(fine[1]);
-            }
-
-        } else {
-
+        if (risultato.empty() || risultato[0] != "true") {
             std::cout << "Mossa non valida.\n";
-
-            mossa.clear();
-
             aggiornaGUI();
+            return;
         }
+
+        aggiornaGUI();
+
+        if (partita.isPartitaFinita())
+            mostraFinePartita(partita.getVincitore());
     }
 }
 

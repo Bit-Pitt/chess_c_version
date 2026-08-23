@@ -3,6 +3,7 @@ CXXFLAGS = -std=c++17  #-Wall -Wextra
 
 LDFLAGS = -lsfml-graphics -lsfml-window -lsfml-system
 
+
 SRC = main.cpp \
       chessboard/scacchiera.cpp \
       pieces/Pezzo.cpp \
@@ -15,7 +16,8 @@ SRC = main.cpp \
       utils/graphicUtils.cpp \
       utils/logicUtils.cpp \
       gameLogic/GameClass.cpp \
-      gameNoGui/game.cpp
+      gameNoGui/game.cpp \
+      bot/ChessBot.cpp
 
 TARGET = scacchi
 
