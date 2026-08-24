@@ -43,8 +43,6 @@ std::vector<Posizione> Pezzo::filtroInchiodatura(Scacchiera& scacchiera, Posizio
     // significa che il pezzo era inchiodato
     if (infoNuove.numeroScacchi > info.numeroScacchi) {
 
-        std::cout << "[DEBUG] Pezzo inchiodato\n";
-
         Posizione posRe = scacchiera.getPosRe(colore);
 
         // Controllo gli scacchi comparsi dopo aver tolto il pezzo

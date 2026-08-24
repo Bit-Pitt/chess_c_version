@@ -8,6 +8,7 @@
 #include "pieces/Alfiere.h"
 #include "pieces/Cavallo.h"
 #include "pieces/Regina.h"
+#include "bot/BotCoordinator.h"
 
 #include "gameLogic/GameClass.h"
 #include "utils/graphicUtils.h"
@@ -125,31 +126,35 @@ int main() {
             configurazione = {TipoGiocatore::BOT, TipoGiocatore::BOT};
         }
         
-        Game partita(scacchiera, configurazione);
-
         SyncContext sync;
 
+        Game partita(scacchiera, configurazione);
+
+        BotCoordinator botCoordinator(0.1);
 
         std::thread gameThread([&]() {
             partita.run(sync);
         });
 
-        
+        std::thread botThread([&]() {
+            botCoordinator.run(sync);
+        });
+
         std::thread guiThread([&]() {
             ChessGUI gui(partita, sync);
             gui.run();
         });
 
-
-        //In questo modo il thread main termina solo dopo il gui thread
         guiThread.join();
 
-        // terminata la gui questo farà terminare il game thread (che se bloccato sveglio)
         sync.running = false;
+        //serve per far terminare gli altri thread (quando leggeranno running=False)
         sem_post(&sync.inputReady);
+        sem_post(&sync.botInputReady);
+        sem_post(&sync.botMoveReady);
 
         gameThread.join();
-
+        botThread.join();
 
     }
 
@@ -159,3 +164,6 @@ int main() {
 
     return 0;
 }
+
+
+

@@ -227,51 +227,86 @@ std::string Game::getVincitore() const {
 }
 
 
-
-
 void Game::run(SyncContext& sync) {
 
     while (sync.running) {
 
-        sem_wait(&sync.inputReady);
-
-        if (!sync.running)
-            break;
-
-        ComandoMossa comando;
-
-        {
-            std::lock_guard<std::mutex> lock(sync.inputMutex);
-            comando = sync.inputQueue.front();
-            sync.inputQueue.pop();
-        }
-
         bool mossaValida = false;
 
-        try {
+        if (isBot(turno)) {
 
-            std::vector<Posizione> movimento = {comando.src, comando.dest};
+            RichiestaBot richiesta{ Scacchiera(scacchiera), turno };
 
-            std::string stringaMossa = creaStringa(movimento, scacchiera);
+            {
+                std::lock_guard<std::mutex> lock(sync.botInputMutex);
+                sync.botInputQueue.push(std::move(richiesta));
+            }
 
-            std::vector<std::string> risultato = eseguiMossa(stringaMossa);
+            sem_post(&sync.botInputReady);
 
-            mossaValida = !risultato.empty() && risultato[0] == "true";
+            RispostaBot risposta;
 
-        } catch (const std::exception& e) {
+            sem_wait(&sync.botMoveReady);
 
-            std::cerr << "[GAME THREAD] Errore: " << e.what() << "\n";
+            {
+                std::lock_guard<std::mutex> lock(sync.botOutputMutex);
+                risposta = sync.botOutputQueue.front();
+                sync.botOutputQueue.pop();
+            }
+
+            try {
+
+                eseguiMossaBot(risposta.mossa);
+                mossaValida = true;
+
+            } catch (const std::exception& e) {
+
+                std::cerr << "[GAME THREAD] Errore BOT: "
+                          << e.what()
+                          << "\n";
+            }
+
+        } else {
+
+            sem_wait(&sync.inputReady);
+
+            if (!sync.running)
+                break;
+
+            ComandoMossa comando;
+
+            {
+                std::lock_guard<std::mutex> lock(sync.inputMutex);
+
+                if (sync.inputQueue.empty())
+                    continue;
+
+                comando = sync.inputQueue.front();
+                sync.inputQueue.pop();
+            }
+
+            try {
+
+                std::vector<Posizione> movimento = {comando.src, comando.dest};
+
+                std::string stringaMossa = creaStringa(movimento, scacchiera);
+
+                std::vector<std::string> risultato = eseguiMossa(stringaMossa);
+
+                mossaValida = !risultato.empty() && risultato[0] == "true";
+
+            } catch (const std::exception& e) {
+
+                std::cerr << "[GAME THREAD] Errore: "
+                          << e.what()
+                          << "\n";
+            }
         }
 
         if (mossaValida)
             checkFinePartita();
 
-        EventoGUI evento{
-            Scacchiera(scacchiera),
-            mossaValida,
-            statoPartita,
-            getVincitore()
-        };
+        EventoGUI evento{ Scacchiera(scacchiera), mossaValida, statoPartita, getVincitore() };
 
         {
             std::lock_guard<std::mutex> lock(sync.outputMutex);
@@ -279,5 +314,8 @@ void Game::run(SyncContext& sync) {
         }
 
         sem_post(&sync.moveProcessed);
+
+        if (!sync.running)
+            break;
     }
 }
