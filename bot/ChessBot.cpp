@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <random>
 #include <iostream>
+#include <cmath>
 
 ChessBot::ChessBot(Scacchiera& scacchiera, double epsilon) : scacchiera(scacchiera), epsilon(epsilon) {}
 
@@ -28,6 +29,11 @@ std::vector<MossaBot> ChessBot::getTopMoves(Colore giocatore) {
             std::vector<Posizione> destinazioni = getPossibleDestination(scacchiera, pezzo, src, giocatore);
 
             for (const Posizione& dest : destinazioni) {
+
+                //Rimuovo l'arrocco che pare dia problemi
+                if (pezzo->getTipo() == TipoPezzo::KING && std::abs(dest.colonna - src.colonna) > 1)
+                    continue;
+
                 double valore = valutaMossa(src, dest, giocatore);
                 mosse.push_back({src, dest, valore});
             }
@@ -202,8 +208,9 @@ double ChessBot::valutaMossa(Posizione src, Posizione dest, Colore giocatore) {
 MossaBot ChessBot::scegliMossa(Colore giocatore) {
     std::vector<MossaBot> topMoves = getTopMoves(giocatore);
 
-    if (topMoves.empty())
-        throw std::runtime_error("Il giocatore non ha mosse disponibili");
+    if (topMoves.empty()){
+        throw std::runtime_error("Il giocatore non ha mosse disponibili oppure la partita è terminata");
+    }
 
     static std::random_device rd;
     static std::mt19937 gen(rd());
@@ -226,8 +233,14 @@ MossaBot ChessBot::scegliMossa(Colore giocatore) {
 
                 std::vector<Posizione> destinazioni = getPossibleDestination(scacchiera, pezzo, src, giocatore);
 
-                for (const Posizione& dest : destinazioni)
+                for (const Posizione& dest : destinazioni){
+
+                    if (pezzo->getTipo() == TipoPezzo::KING &&      //Elimino arrocco
+                        std::abs(dest.colonna - src.colonna) > 1)
+                        continue;
+
                     tutteLeMosse.push_back({src, dest, 0.0});
+                }
             }
         }
 

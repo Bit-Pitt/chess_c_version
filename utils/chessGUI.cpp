@@ -39,78 +39,6 @@ ChessGUI::ChessGUI(Game& partita, SyncContext& sync) : partita(partita), sync(sy
 }
 
 
-/*
-void ChessGUI::run() {
-    while (finestra.isOpen()) {
-
-        if (!partitaFinita && partita.isBot(partita.getTurno())) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-
-            MossaBot mossaBot = partita.ottieniMossa(partita.getTurno());
-            partita.eseguiMossaBot(mossaBot);
-
-            if (partita.isPartitaFinita())
-                mostraFinePartita(partita.getVincitore());
-        }
-
-        sf::Event evento;
-
-        while (finestra.pollEvent(evento)) {
-
-            if (evento.type == sf::Event::Closed)
-                finestra.close();
-
-            if (evento.type == sf::Event::MouseButtonPressed &&
-                evento.mouseButton.button == sf::Mouse::Left &&
-                !partitaFinita &&
-                !partita.isBot(partita.getTurno())) {
-
-                click(evento.mouseButton.x, evento.mouseButton.y);
-            }
-        }
-
-        finestra.clear();
-        aggiornaGUI();
-        finestra.display();
-    }
-}
-*/
-
-void ChessGUI::run() {
-
-    while (finestra.isOpen() && sync.running) {
-
-        sf::Event evento;
-
-        while (finestra.pollEvent(evento)) {
-
-            if (evento.type == sf::Event::Closed) {
-
-                sync.running = false;
-
-                sem_post(&sync.inputReady);
-
-                finestra.close();
-            }
-
-            if (evento.type == sf::Event::MouseButtonPressed &&
-                evento.mouseButton.button == sf::Mouse::Left &&
-                !partitaFinita) {
-
-                click(
-                    evento.mouseButton.x,
-                    evento.mouseButton.y
-                );
-            }
-        }
-
-        finestra.clear();
-
-        aggiornaGUI();
-
-        finestra.display();
-    }
-}
 
 void ChessGUI::disegnaScacchiera() {
 
@@ -262,6 +190,89 @@ void ChessGUI::creaImmagini() {
         throw std::runtime_error("Impossibile caricare queen_white.png");
 }
 
+
+/*
+void ChessGUI::run() {
+    while (finestra.isOpen()) {
+
+        if (!partitaFinita && partita.isBot(partita.getTurno())) {
+            std::this_thread::sleep_for(std::chrono::seconds(1));
+
+            MossaBot mossaBot = partita.ottieniMossa(partita.getTurno());
+            partita.eseguiMossaBot(mossaBot);
+
+            if (partita.isPartitaFinita())
+                mostraFinePartita(partita.getVincitore());
+        }
+
+        sf::Event evento;
+
+        while (finestra.pollEvent(evento)) {
+
+            if (evento.type == sf::Event::Closed)
+                finestra.close();
+
+            if (evento.type == sf::Event::MouseButtonPressed &&
+                evento.mouseButton.button == sf::Mouse::Left &&
+                !partitaFinita &&
+                !partita.isBot(partita.getTurno())) {
+
+                click(evento.mouseButton.x, evento.mouseButton.y);
+            }
+        }
+
+        finestra.clear();
+        aggiornaGUI();
+        finestra.display();
+    }
+}
+*/
+void ChessGUI::run() {
+    while (finestra.isOpen() && sync.running) {
+
+        sf::Event evento;
+
+        while (finestra.pollEvent(evento)) {
+
+            if (evento.type == sf::Event::Closed) {
+                sync.running = false;
+                sem_post(&sync.inputReady);
+                sem_post(&sync.botInputReady);
+                sem_post(&sync.botMoveReady);
+                finestra.close();
+            }
+
+            if (evento.type == sf::Event::MouseButtonPressed &&
+                evento.mouseButton.button == sf::Mouse::Left &&
+                !partitaFinita) {
+
+                click(evento.mouseButton.x, evento.mouseButton.y);
+            }
+        }
+
+        // Controllo se Game ha prodotto un nuovo stato
+        {
+            std::lock_guard<std::mutex> lock(sync.guiMutex);
+
+            if (sync.guiUpdateDisponibile) {
+
+                scacchieraVisualizzata = sync.ultimoEventoGUI.scacchiera;
+
+                if (sync.ultimoEventoGUI.statoPartita != StatoPartita::IN_CORSO) {
+                    partitaFinita = true;
+                    vincitore = sync.ultimoEventoGUI.vincitore;
+                }
+
+                sync.guiUpdateDisponibile = false;
+            }
+        }
+
+        finestra.clear();
+        aggiornaGUI();
+        finestra.display();
+    }
+}
+
 /*
 void ChessGUI::click(int x, int y) {
     Posizione pos = convertiPixelPosizione(x, y);
@@ -309,11 +320,11 @@ void ChessGUI::click(int x, int y) {
 }
 */
 
+/**
+ * Quando è formula la mossa --> sveglio game thread
+ */
 void ChessGUI::click(int x, int y) {
-
     Posizione pos = convertiPixelPosizione(x, y);
-
-    std::cout << "Hai cliccato: " << pos.riga << " " << pos.colonna << "\n";
 
     if (mossa.empty()) {
 
@@ -329,56 +340,24 @@ void ChessGUI::click(int x, int y) {
         return;
     }
 
-    //annulla quando la nuova 2° casella selezionata == alla prima
     if (mossa[0] == pos) {
-
-        std::cout << "Selezione annullata.\n";
-
         mossa.clear();
         aggiornaGUI();
-
         return;
     }
 
     mossa.push_back(pos);
 
-    // Inserisce la mossa nella struttura condivisa 
     ComandoMossa comando{mossa[0], mossa[1]};
+
     {
         std::lock_guard<std::mutex> lock(sync.inputMutex);
         sync.inputQueue.push(comando);
     }
-    std::cout<<"Sveglio il GAME\n";
+
     sem_post(&sync.inputReady);
 
-    // Per questo primo test la GUI aspetta che
-    // il Game abbia elaborato la mossa.
-    sem_wait(&sync.moveProcessed);
-
-    //Risveglio
-    EventoGUI evento;
-
-    {
-        std::lock_guard<std::mutex> lock(sync.outputMutex);
-
-        evento = std::move(sync.outputQueue.front());
-        sync.outputQueue.pop();
-    }
-
-    scacchieraVisualizzata = std::move(evento.scacchiera);
-
-    if (!evento.mossaValida)
-        std::cout << "Mossa non valida.\n";
-
     mossa.clear();
-
-    if (evento.statoPartita != StatoPartita::IN_CORSO) {
-        partitaFinita = true;
-        vincitore = evento.vincitore;
-    }
-
-
-    aggiornaGUI();
 }
 
 

@@ -187,46 +187,49 @@ Scacchiera::Scacchiera(const Scacchiera& altra) {
                 continue;
 
             Posizione pos{i, j};
+            Pezzo* nuovoPezzo = nullptr;
 
             switch (pezzo->getTipo()) {
                 case TipoPezzo::PAWN:
-                    aggiungiPezzo(new Pedone(pezzo->getColore()), pos);
+                    nuovoPezzo = new Pedone(pezzo->getColore());
                     break;
 
                 case TipoPezzo::ROOK:
-                    aggiungiPezzo(new Torre(pezzo->getColore()), pos);
+                    nuovoPezzo = new Torre(pezzo->getColore());
                     break;
 
                 case TipoPezzo::KNIGHT:
-                    aggiungiPezzo(new Cavallo(pezzo->getColore()), pos);
+                    nuovoPezzo = new Cavallo(pezzo->getColore());
                     break;
 
                 case TipoPezzo::BISHOP:
-                    aggiungiPezzo(new Alfiere(pezzo->getColore()), pos);
+                    nuovoPezzo = new Alfiere(pezzo->getColore());
                     break;
 
                 case TipoPezzo::QUEEN:
-                    aggiungiPezzo(new Regina(pezzo->getColore()), pos);
+                    nuovoPezzo = new Regina(pezzo->getColore());
                     break;
 
                 case TipoPezzo::KING:
-                    aggiungiPezzo(new Re(pezzo->getColore()), pos);
+                    nuovoPezzo = new Re(pezzo->getColore());
                     break;
             }
+
+            nuovoPezzo->setMaiMosso(pezzo->hasMaiMosso());
+            aggiungiPezzo(nuovoPezzo, pos);
         }
     }
 }
-
-
 Scacchiera& Scacchiera::operator=(const Scacchiera& altra) {
     if (this == &altra)
         return *this;
 
-    for (auto& riga : scacchiera)
+    for (auto& riga : scacchiera) {
         for (Pezzo*& pezzo : riga) {
             delete pezzo;
             pezzo = nullptr;
         }
+    }
 
     for (int i = 0; i < 8; ++i) {
         for (int j = 0; j < 8; ++j) {
@@ -237,32 +240,37 @@ Scacchiera& Scacchiera::operator=(const Scacchiera& altra) {
                 continue;
 
             Posizione pos{i, j};
+            Pezzo* nuovoPezzo = nullptr;
 
             switch (pezzo->getTipo()) {
                 case TipoPezzo::PAWN:
-                    aggiungiPezzo(new Pedone(pezzo->getColore()), pos);
+                    nuovoPezzo = new Pedone(pezzo->getColore());
                     break;
 
                 case TipoPezzo::ROOK:
-                    aggiungiPezzo(new Torre(pezzo->getColore()), pos);
+                    nuovoPezzo = new Torre(pezzo->getColore());
                     break;
 
                 case TipoPezzo::KNIGHT:
-                    aggiungiPezzo(new Cavallo(pezzo->getColore()), pos);
+                    nuovoPezzo = new Cavallo(pezzo->getColore());
                     break;
 
                 case TipoPezzo::BISHOP:
-                    aggiungiPezzo(new Alfiere(pezzo->getColore()), pos);
+                    nuovoPezzo = new Alfiere(pezzo->getColore());
                     break;
 
                 case TipoPezzo::QUEEN:
-                    aggiungiPezzo(new Regina(pezzo->getColore()), pos);
+                    nuovoPezzo = new Regina(pezzo->getColore());
                     break;
 
                 case TipoPezzo::KING:
-                    aggiungiPezzo(new Re(pezzo->getColore()), pos);
+                    nuovoPezzo = new Re(pezzo->getColore());
                     break;
             }
+
+            nuovoPezzo->setMaiMosso(pezzo->hasMaiMosso());
+
+            aggiungiPezzo(nuovoPezzo, pos);
         }
     }
 

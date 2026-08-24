@@ -23,6 +23,7 @@ class Pezzo {
         
         virtual bool hasMaiMosso() const;
         virtual RisultatoMossa sposta(Scacchiera& scacchiera, Posizione csrc, Posizione cdest);
+        virtual void setMaiMosso(bool valore);
 
     protected:
         std::vector<Posizione> filtroInchiodatura(Scacchiera& scacchiera, Posizione csrc,

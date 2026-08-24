@@ -49,3 +49,8 @@ TipoPezzo Torre::getTipo() const {
 bool Torre::hasMaiMosso() const {
     return maiMosso;
 }
+
+
+void Torre::setMaiMosso(bool valore) {
+    maiMosso = valore;
+}

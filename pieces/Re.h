@@ -16,7 +16,7 @@ public:
     TipoPezzo getTipo() const override;
     bool hasMaiMosso() const override;
 
-    void setMaiMosso(bool valore);
+    void setMaiMosso(bool valore) override;
 
 private:
     std::vector<Posizione> arrocco(Scacchiera& scacchiera, Posizione csrc, Colore giocatore, const std::vector<Posizione>& controllateAvversario);

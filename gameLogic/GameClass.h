@@ -69,5 +69,7 @@ public:
  
     void run(SyncContext& sync);
 
+    double getEpsilonBot(Colore giocatore) const;
+    
     void promuovi();
 };

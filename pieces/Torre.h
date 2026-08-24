@@ -12,6 +12,7 @@ public:
 
     TipoPezzo getTipo() const override;
     bool hasMaiMosso() const override;
+    void setMaiMosso(bool valore) override;
 
 private:
     bool maiMosso;

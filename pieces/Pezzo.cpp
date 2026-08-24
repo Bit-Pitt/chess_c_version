@@ -15,9 +15,13 @@ bool Pezzo::hasMaiMosso() const {
     return false; 
 }
 
+
+void Pezzo::setMaiMosso(bool valore) {
+}
+
 RisultatoMossa Pezzo::sposta(Scacchiera& scacchiera, Posizione csrc, Posizione cdest) {
     scacchiera.aggiungiPezzo(nullptr,csrc);
-    if (!scacchiera.casellaVuota(cdest)) std::cout << "Catturato un pezzo!\n";
+    //if (!scacchiera.casellaVuota(cdest)) std::cout << "Catturato un pezzo!\n";
     scacchiera.aggiungiPezzo(this,cdest);
     return RisultatoMossa::NonPromozione;
 }

@@ -162,8 +162,9 @@ void Game::eseguiMossaBot(const MossaBot& mossa) {
 
     std::vector<std::string> risultato = eseguiMossa(stringaMossa);
 
-    if (risultato.empty() || risultato[0] != "true")
+    if (risultato.empty() || risultato[0] != "true"){
         throw std::runtime_error("Il bot ha generato una mossa non valida");
+    }
 }
 
 bool Game::isBot(Colore giocatore) const {
@@ -227,44 +228,41 @@ std::string Game::getVincitore() const {
 }
 
 
+
+/**
+ *  Comportamento diverso in base a giocatore UMANO o BOT
+ */
 void Game::run(SyncContext& sync) {
-
     while (sync.running) {
-
-        bool mossaValida = false;
 
         if (isBot(turno)) {
 
-            RichiestaBot richiesta{ Scacchiera(scacchiera), turno };
+            RichiestaBot richiesta{
+                Scacchiera(scacchiera),
+                turno,
+                getEpsilonBot(turno)
+            };
 
             {
                 std::lock_guard<std::mutex> lock(sync.botInputMutex);
-                sync.botInputQueue.push(std::move(richiesta));
+                sync.richiestaBot = std::move(richiesta);
             }
 
             sem_post(&sync.botInputReady);
 
-            RispostaBot risposta;
-
             sem_wait(&sync.botMoveReady);
+
+            if (!sync.running)
+                break;
+
+            MossaBot mossa;
 
             {
                 std::lock_guard<std::mutex> lock(sync.botOutputMutex);
-                risposta = sync.botOutputQueue.front();
-                sync.botOutputQueue.pop();
+                mossa = sync.rispostaBot;
             }
 
-            try {
-
-                eseguiMossaBot(risposta.mossa);
-                mossaValida = true;
-
-            } catch (const std::exception& e) {
-
-                std::cerr << "[GAME THREAD] Errore BOT: "
-                          << e.what()
-                          << "\n";
-            }
+            eseguiMossaBot(mossa);
 
         } else {
 
@@ -277,45 +275,46 @@ void Game::run(SyncContext& sync) {
 
             {
                 std::lock_guard<std::mutex> lock(sync.inputMutex);
-
-                if (sync.inputQueue.empty())
-                    continue;
-
                 comando = sync.inputQueue.front();
                 sync.inputQueue.pop();
             }
 
-            try {
+            std::vector<Posizione> movimento = {comando.src, comando.dest};
+            std::string stringaMossa = creaStringa(movimento, scacchiera);
 
-                std::vector<Posizione> movimento = {comando.src, comando.dest};
-
-                std::string stringaMossa = creaStringa(movimento, scacchiera);
-
-                std::vector<std::string> risultato = eseguiMossa(stringaMossa);
-
-                mossaValida = !risultato.empty() && risultato[0] == "true";
-
-            } catch (const std::exception& e) {
-
-                std::cerr << "[GAME THREAD] Errore: "
-                          << e.what()
-                          << "\n";
-            }
+            eseguiMossa(stringaMossa);
         }
 
-        if (mossaValida)
-            checkFinePartita();
-
-        EventoGUI evento{ Scacchiera(scacchiera), mossaValida, statoPartita, getVincitore() };
+        checkFinePartita();
+        
+        //Aggiorni scacchiera+stato partita e notifich tramite "guiUpdateDisponibile" che la scacchiera è aggiornata
+        EventoGUI evento{
+            Scacchiera(scacchiera),
+            true,
+            statoPartita,
+            getVincitore(),
+            turno
+        };
+        
 
         {
-            std::lock_guard<std::mutex> lock(sync.outputMutex);
-            sync.outputQueue.push(std::move(evento));
+            std::lock_guard<std::mutex> lock(sync.guiMutex);
+            sync.ultimoEventoGUI = std::move(evento);
+            sync.guiUpdateDisponibile = true;
         }
-
-        sem_post(&sync.moveProcessed);
-
-        if (!sync.running)
-            break;
     }
+}
+
+
+double Game::getEpsilonBot(Colore giocatore) const {
+    if (tipoBianco == TipoGiocatore::BOT &&
+        tipoNero == TipoGiocatore::BOT) {
+
+        if (giocatore == Colore::WHITE)
+            return 0.1;
+
+        return 1.0;
+    }
+
+    return 0.1;
 }
