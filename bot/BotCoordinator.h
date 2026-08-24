@@ -1,3 +1,5 @@
+
+
 #ifndef BOT_COORDINATOR_H
 #define BOT_COORDINATOR_H
 
@@ -6,10 +8,12 @@
 class BotCoordinator {
 
 private:
-    double epsilon;
+
+    int numeroWorker;
 
 public:
-    BotCoordinator(double epsilon);
+
+    BotCoordinator(int numeroWorker);
 
     void run(SyncContext& sync);
 };

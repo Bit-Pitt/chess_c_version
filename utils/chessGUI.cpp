@@ -191,42 +191,6 @@ void ChessGUI::creaImmagini() {
 }
 
 
-/*
-void ChessGUI::run() {
-    while (finestra.isOpen()) {
-
-        if (!partitaFinita && partita.isBot(partita.getTurno())) {
-            std::this_thread::sleep_for(std::chrono::seconds(1));
-
-            MossaBot mossaBot = partita.ottieniMossa(partita.getTurno());
-            partita.eseguiMossaBot(mossaBot);
-
-            if (partita.isPartitaFinita())
-                mostraFinePartita(partita.getVincitore());
-        }
-
-        sf::Event evento;
-
-        while (finestra.pollEvent(evento)) {
-
-            if (evento.type == sf::Event::Closed)
-                finestra.close();
-
-            if (evento.type == sf::Event::MouseButtonPressed &&
-                evento.mouseButton.button == sf::Mouse::Left &&
-                !partitaFinita &&
-                !partita.isBot(partita.getTurno())) {
-
-                click(evento.mouseButton.x, evento.mouseButton.y);
-            }
-        }
-
-        finestra.clear();
-        aggiornaGUI();
-        finestra.display();
-    }
-}
-*/
 void ChessGUI::run() {
     while (finestra.isOpen() && sync.running) {
 
@@ -273,52 +237,7 @@ void ChessGUI::run() {
     }
 }
 
-/*
-void ChessGUI::click(int x, int y) {
-    Posizione pos = convertiPixelPosizione(x, y);
-    Scacchiera& scacchiera = partita.getBoard();
 
-    if (mossa.empty()) {
-        Pezzo* pezzo = scacchiera.getPezzo(pos);
-
-        if (pezzo == nullptr) {
-            std::cout << "Casella vuota: seleziona un pezzo.\n";
-            return;
-        }
-
-        mossa.push_back(pos);
-        aggiornaGUI();
-        return;
-    }
-
-    if (mossa.size() == 1) {
-
-        if (mossa[0] == pos) {
-            mossa.clear();
-            aggiornaGUI();
-            return;
-        }
-
-        mossa.push_back(pos);
-
-        std::string stringaMossa = creaStringa(mossa, scacchiera);
-        std::vector<std::string> risultato = partita.eseguiMossa(stringaMossa);
-
-        mossa.clear();
-
-        if (risultato.empty() || risultato[0] != "true") {
-            std::cout << "Mossa non valida.\n";
-            aggiornaGUI();
-            return;
-        }
-
-        aggiornaGUI();
-
-        if (partita.isPartitaFinita())
-            mostraFinePartita(partita.getVincitore());
-    }
-}
-*/
 
 /**
  * Quando è formula la mossa --> sveglio game thread
@@ -426,4 +345,5 @@ void ChessGUI::disegnaFinePartita() {
     );
 
     finestra.draw(testoGrafico);
+
 }

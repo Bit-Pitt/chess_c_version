@@ -10,6 +10,7 @@
 ChessBot::ChessBot(Scacchiera& scacchiera, double epsilon) : scacchiera(scacchiera), epsilon(epsilon) {}
 
 /*
+    Tenuta ma non più utilizzata nella versione concorrente
     1) Cicla su tutte le mosse del giocatore 
     2) valutaMossa() assegna un valore numerico
     3) ritorna le top5
@@ -46,6 +47,35 @@ std::vector<MossaBot> ChessBot::getTopMoves(Colore giocatore) {
 
     if (mosse.size() > 5)
         mosse.resize(5);
+
+    return mosse;
+}
+
+
+std::vector<MossaBot> ChessBot::getMosseLegali(Colore giocatore) {
+    std::vector<MossaBot> mosse;
+
+    for (int i = 0; i < 8; ++i) {
+        for (int j = 0; j < 8; ++j) {
+
+            Posizione src{i, j};
+            Pezzo* pezzo = scacchiera.getPezzo(src);
+
+            if (pezzo == nullptr || pezzo->getColore() != giocatore)
+                continue;
+
+            std::vector<Posizione> destinazioni = getPossibleDestination(scacchiera, pezzo, src, giocatore);
+
+            for (const Posizione& dest : destinazioni) {
+
+                if (pezzo->getTipo() == TipoPezzo::KING &&
+                    std::abs(dest.colonna - src.colonna) > 1)
+                    continue;
+
+                mosse.push_back({src, dest, 0.0});
+            }
+        }
+    }
 
     return mosse;
 }
@@ -203,64 +233,58 @@ double ChessBot::valutaMossa(Posizione src, Posizione dest, Colore giocatore) {
     return score;
 }
 
+/**
+ * Sceglie secondo la policy (<epsilon casuale altrimenti la migliore (casuale tra le migliori))
+ */
+MossaBot ChessBot::scegliMossa(const std::vector<MossaBot>& mosse) {
 
+    if (mosse.empty())
+        throw std::runtime_error("Il giocatore non ha mosse disponibili");
 
-MossaBot ChessBot::scegliMossa(Colore giocatore) {
-    std::vector<MossaBot> topMoves = getTopMoves(giocatore);
+    std::vector<MossaBot> ordinate = mosse;
 
-    if (topMoves.empty()){
-        throw std::runtime_error("Il giocatore non ha mosse disponibili oppure la partita è terminata");
-    }
+    std::sort(ordinate.begin(), ordinate.end(), [](const MossaBot& a, const MossaBot& b) {
+        return a.valore > b.valore;
+    });
 
     static std::random_device rd;
     static std::mt19937 gen(rd());
 
     std::uniform_real_distribution<double> probabilita(0.0, 1.0);
 
-    // 10%: mossa casuale tra tutte le mosse LEGALI
+    // epsilon -> mossa casuale tra tutte le mosse
     if (probabilita(gen) < epsilon) {
 
-        std::vector<MossaBot> tutteLeMosse;
+        std::uniform_int_distribution<int> indice(
+            0,
+            static_cast<int>(ordinate.size()) - 1
+        );
 
-        for (int i = 0; i < 8; ++i) {
-            for (int j = 0; j < 8; ++j) {
-
-                Posizione src{i, j};
-                Pezzo* pezzo = scacchiera.getPezzo(src);
-
-                if (pezzo == nullptr || pezzo->getColore() != giocatore)
-                    continue;
-
-                std::vector<Posizione> destinazioni = getPossibleDestination(scacchiera, pezzo, src, giocatore);
-
-                for (const Posizione& dest : destinazioni){
-
-                    if (pezzo->getTipo() == TipoPezzo::KING &&      //Elimino arrocco
-                        std::abs(dest.colonna - src.colonna) > 1)
-                        continue;
-
-                    tutteLeMosse.push_back({src, dest, 0.0});
-                }
-            }
-        }
-
-        std::uniform_int_distribution<int> indice(0, static_cast<int>(tutteLeMosse.size()) - 1);
-
-        return tutteLeMosse[indice(gen)];
+        return ordinate[indice(gen)];
     }
 
-    double valoreMassimo = topMoves[0].valore;
+    double valoreMassimo = ordinate[0].valore;
 
     std::vector<MossaBot> migliori;
 
-    for (const MossaBot& mossa : topMoves) {
+    for (const MossaBot& mossa : ordinate) {
+
         if (mossa.valore == valoreMassimo)
             migliori.push_back(mossa);
         else
             break;
     }
 
-    std::uniform_int_distribution<int> indice(0, static_cast<int>(migliori.size()) - 1);
+    std::uniform_int_distribution<int> indice(
+        0,
+        static_cast<int>(migliori.size()) - 1
+    );
 
     return migliori[indice(gen)];
+}
+
+
+//permette ai task di poter usare il metodo privato "valutaMossa"
+double ChessBot::valutaMossaTask(Posizione src, Posizione dest, Colore giocatore) {
+    return valutaMossa(src, dest, giocatore);
 }

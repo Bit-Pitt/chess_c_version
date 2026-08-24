@@ -9,6 +9,7 @@
 #include "pieces/Cavallo.h"
 #include "pieces/Regina.h"
 #include "bot/BotCoordinator.h"
+#include "bot/BotWorker.h"
 
 #include "gameLogic/GameClass.h"
 #include "utils/graphicUtils.h"
@@ -130,7 +131,16 @@ int main() {
 
         Game partita(scacchiera, configurazione);
 
-        BotCoordinator botCoordinator(0.1);
+        BotCoordinator botCoordinator(4);
+
+        std::vector<std::thread> workerThreads;
+
+        for (int i = 0; i < 4; ++i) {
+            workerThreads.emplace_back([&]() {
+                BotWorker worker;
+                worker.run(sync);
+            });
+        }
 
         std::thread gameThread([&]() {
             partita.run(sync);
@@ -153,8 +163,14 @@ int main() {
         sem_post(&sync.botInputReady);
         sem_post(&sync.botMoveReady);
 
+        for (int i = 0; i < 4; ++i)
+            sem_post(&sync.taskReady);
+
         gameThread.join();
         botThread.join();
+
+        for (std::thread& worker : workerThreads)
+            worker.join();
 
     }
 

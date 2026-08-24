@@ -60,7 +60,6 @@ public:
     );
 
     bool isBot(Colore giocatore) const;
-    MossaBot ottieniMossa(Colore giocatore);
     void eseguiMossaBot(const MossaBot& mossa);
 
     std::vector<std::string> eseguiMossa(const std::string& mossaStringa);

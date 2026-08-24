@@ -5,6 +5,7 @@
 #include <queue>
 #include <mutex>
 #include <atomic>
+#include <string>
 
 #include "Types.h"
 #include "chessboard/scacchiera.h"
@@ -36,24 +37,57 @@ struct RispostaBot {
     MossaBot mossa;
 };
 
+struct MossaBotTask {
+    Scacchiera scacchiera;
+    Posizione src;
+    Posizione dest;
+    Colore giocatore;
+};
+
+
+struct RisultatoBotTask {
+    Posizione src;
+    Posizione dest;
+    double valore;
+};
+
 
 struct SyncContext {
 
+    // GUI --> Game
     std::queue<ComandoMossa> inputQueue;
     std::mutex inputMutex;
     sem_t inputReady;
 
+    // Game --> Bot coordinator
     RichiestaBot richiestaBot;
     std::mutex botInputMutex;
     sem_t botInputReady;
 
+    //Bot coordinator --> GAME
     MossaBot rispostaBot;
     std::mutex botOutputMutex;
     sem_t botMoveReady;
 
+    //Game-->GUI
     EventoGUI ultimoEventoGUI;
     std::mutex guiMutex;
     bool guiUpdateDisponibile = false;
+
+    // BOT COORDINATOR -> WORKERS
+    std::queue<MossaBotTask> taskQueue;
+    std::mutex taskMutex;
+    sem_t taskReady;
+
+
+    // WORKERS -> BOT COORDINATOR
+    std::queue<RisultatoBotTask> resultQueue;
+    std::mutex resultMutex;
+    sem_t resultReady;
+
+
+
+
 
     std::atomic<bool> running{true};
 
@@ -61,12 +95,16 @@ struct SyncContext {
         sem_init(&inputReady, 0, 0);
         sem_init(&botInputReady, 0, 0);
         sem_init(&botMoveReady, 0, 0);
+        sem_init(&taskReady, 0, 0);
+        sem_init(&resultReady, 0, 0);
     }
 
     ~SyncContext() {
         sem_destroy(&inputReady);
         sem_destroy(&botInputReady);
         sem_destroy(&botMoveReady);
+        sem_destroy(&taskReady);
+        sem_destroy(&resultReady);
     }
 };
 

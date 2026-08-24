@@ -142,15 +142,6 @@ Colore Game::getTurno(){
     return turno;
 }
 
-MossaBot Game::ottieniMossa(Colore giocatore) {
-    if (!isBot(giocatore))
-        throw std::runtime_error("Il giocatore non è un bot");
-
-    if (giocatore == Colore::WHITE)
-        return botBianco->scegliMossa(giocatore);
-
-    return botNero->scegliMossa(giocatore);
-}
 
 
 

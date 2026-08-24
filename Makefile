@@ -19,7 +19,8 @@ SRC = main.cpp \
       gameNoGui/game.cpp \
       bot/ChessBot.cpp \
       utils/chessGUI.cpp \
-      bot/BotCoordinator.cpp
+      bot/BotCoordinator.cpp \
+      bot/BotWorker.cpp \
 
 TARGET = scacchi
 

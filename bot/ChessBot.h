@@ -27,7 +27,11 @@ public:
     ChessBot(Scacchiera& scacchiera, double epsilon = 0.10);
 
     std::vector<MossaBot> getTopMoves(Colore giocatore);
-    MossaBot scegliMossa(Colore giocatore);
+    //MossaBot scegliMossa(Colore giocatore);
+    double valutaMossaTask(Posizione src, Posizione dest, Colore giocatore);
+
+    std::vector<MossaBot> getMosseLegali(Colore giocatore);
+    MossaBot scegliMossa(const std::vector<MossaBot>& mosse);
 
 };
 
