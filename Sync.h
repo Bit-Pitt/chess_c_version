@@ -16,9 +16,12 @@ struct ComandoMossa {
 };
 
 
+
 struct EventoGUI {
     Scacchiera scacchiera;
     bool mossaValida;
+    StatoPartita statoPartita;
+    std::string vincitore;
 };
 
 

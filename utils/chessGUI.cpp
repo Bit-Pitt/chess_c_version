@@ -348,7 +348,7 @@ void ChessGUI::click(int x, int y) {
         std::lock_guard<std::mutex> lock(sync.inputMutex);
         sync.inputQueue.push(comando);
     }
-
+    std::cout<<"Sveglio il GAME\n";
     sem_post(&sync.inputReady);
 
     // Per questo primo test la GUI aspetta che
@@ -372,8 +372,19 @@ void ChessGUI::click(int x, int y) {
 
     mossa.clear();
 
+    if (evento.statoPartita != StatoPartita::IN_CORSO) {
+        partitaFinita = true;
+        vincitore = evento.vincitore;
+    }
+
+
     aggiornaGUI();
 }
+
+
+
+
+    
 
 void ChessGUI::mostraFinePartita(const std::string& vincitore) {
 

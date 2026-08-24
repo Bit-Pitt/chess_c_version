@@ -205,12 +205,7 @@ std::vector<std::string> Game::eseguiMossa(const std::string& mossaStringa) {
 
     if (risultato.size() > 1 && risultato[1] == "Promozione")
         promuovi();
-
-    std::vector<std::string> fine = checkFinePartita();
-
-    if (!fine.empty() && fine[0] == "true")
-        return fine;
-
+    
     return risultato;
 }
 
@@ -247,10 +242,6 @@ void Game::run(SyncContext& sync) {
 
         {
             std::lock_guard<std::mutex> lock(sync.inputMutex);
-
-            if (sync.inputQueue.empty())
-                continue;
-
             comando = sync.inputQueue.front();
             sync.inputQueue.pop();
         }
@@ -259,31 +250,34 @@ void Game::run(SyncContext& sync) {
 
         try {
 
-            std::vector<Posizione> movimento = {
-                comando.src,
-                comando.dest
-            };
+            std::vector<Posizione> movimento = {comando.src, comando.dest};
 
             std::string stringaMossa = creaStringa(movimento, scacchiera);
 
             std::vector<std::string> risultato = eseguiMossa(stringaMossa);
+
             mossaValida = !risultato.empty() && risultato[0] == "true";
 
         } catch (const std::exception& e) {
 
-            std::cerr << "[GAME THREAD] Errore: "
-                      << e.what()
-                      << "\n";
+            std::cerr << "[GAME THREAD] Errore: " << e.what() << "\n";
         }
 
-        // passa snapshot alla GUI della scacchiera (costruttore copia!)
-        EventoGUI evento{ Scacchiera(scacchiera), mossaValida };  
+        if (mossaValida)
+            checkFinePartita();
+
+        EventoGUI evento{
+            Scacchiera(scacchiera),
+            mossaValida,
+            statoPartita,
+            getVincitore()
+        };
 
         {
             std::lock_guard<std::mutex> lock(sync.outputMutex);
             sync.outputQueue.push(std::move(evento));
         }
 
-        sem_post(&sync.moveProcessed);      //sveglierà GUI thread
+        sem_post(&sync.moveProcessed);
     }
 }
