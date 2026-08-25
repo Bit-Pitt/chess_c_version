@@ -31,10 +31,6 @@ std::vector<MossaBot> ChessBot::getTopMoves(Colore giocatore) {
 
             for (const Posizione& dest : destinazioni) {
 
-                //Rimuovo l'arrocco che pare dia problemi
-                if (pezzo->getTipo() == TipoPezzo::KING && std::abs(dest.colonna - src.colonna) > 1)
-                    continue;
-
                 double valore = valutaMossa(src, dest, giocatore);
                 mosse.push_back({src, dest, valore});
             }
@@ -67,10 +63,6 @@ std::vector<MossaBot> ChessBot::getMosseLegali(Colore giocatore) {
             std::vector<Posizione> destinazioni = getPossibleDestination(scacchiera, pezzo, src, giocatore);
 
             for (const Posizione& dest : destinazioni) {
-
-                if (pezzo->getTipo() == TipoPezzo::KING &&
-                    std::abs(dest.colonna - src.colonna) > 1)
-                    continue;
 
                 mosse.push_back({src, dest, 0.0});
             }

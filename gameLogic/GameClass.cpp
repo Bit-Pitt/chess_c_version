@@ -12,10 +12,10 @@
 
 Game::Game(Scacchiera& scacchiera, ConfigurazioneGiocatori configurazione) : scacchiera(scacchiera), tipoBianco(configurazione.bianco), tipoNero(configurazione.nero) {
     if (tipoBianco == TipoGiocatore::BOT)
-        botBianco = std::make_unique<ChessBot>(this->scacchiera, 0.05);
+        botBianco = std::make_unique<ChessBot>(this->scacchiera, 0.1);
 
     if (tipoNero == TipoGiocatore::BOT) {
-        double epsilon = (tipoBianco == TipoGiocatore::BOT) ? 1.0 : 0.05;
+        double epsilon = (tipoBianco == TipoGiocatore::BOT) ? 1.0 : 0.1;
         botNero = std::make_unique<ChessBot>(this->scacchiera, epsilon);
     }
 
@@ -108,8 +108,8 @@ std::vector<std::string> Game::muovi( Scacchiera& scacchiera,TipoPezzo nome,Posi
     std::vector<Posizione> possibiliDest = getPossibleDestination(scacchiera, piece, csrc, giocatore);
 
     // Controllo speciale: arrocco
-    
-    if (isArrocco(scacchiera, cdest, giocatore)) {
+    if (piece->getTipo() == TipoPezzo::KING && isArrocco(scacchiera, cdest, giocatore)) {
+
         if (std::find(possibiliDest.begin(), possibiliDest.end(), cdest) != possibiliDest.end()) {
 
             effettuaArrocco(scacchiera, cdest);

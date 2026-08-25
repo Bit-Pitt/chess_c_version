@@ -94,7 +94,7 @@ bool mattoDaSingoloScacco(Scacchiera& scacchiera, Colore giocatore, const InfoSc
         return false;
 
     Posizione posScacco = info.posizioniScacco[0];
-    std::vector<Posizione> controllate = caseControllateDaGiocatore(scacchiera, giocatore, false, giocatore  , true );
+    std::vector<Posizione> controllate = caseRaggiungibiliDaGiocatore(scacchiera, giocatore, true );
 
     if (std::find(controllate.begin(), controllate.end(), posScacco) != controllate.end())
         return false;
