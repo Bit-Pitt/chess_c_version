@@ -1,9 +1,9 @@
-#include "graphicUtils.h"
+#include "../utils/graphicUtils.h"
 #include "chessGUI.h"
 #include "../pieces/Pezzo.h"
 #include "../chessboard/scacchiera.h"
 #include "../gameLogic/GameClass.h"
-#include "logicUtils.h"
+#include "../utils/logicUtils.h"
 #include "../Types.h"
 
 #include <iostream>

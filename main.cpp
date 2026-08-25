@@ -1,5 +1,5 @@
 #include <iostream>
-#include "utils/chessGUI.h"
+#include "GUI/chessGUI.h"
 #include "chessboard/scacchiera.h"
 #include "gameNoGui/game.h"
 #include "pieces/Pedone.h"
@@ -10,6 +10,7 @@
 #include "pieces/Regina.h"
 #include "bot/BotCoordinator.h"
 #include "bot/BotWorker.h"
+#include "GUI/monitor.h"
 
 #include "gameLogic/GameClass.h"
 #include "utils/graphicUtils.h"
@@ -133,6 +134,8 @@ int main() {
 
         BotCoordinator botCoordinator(4);
 
+        Monitor monitor;
+
         std::vector<std::thread> workerThreads;
 
         for (int i = 0; i < 4; ++i) {
@@ -148,6 +151,10 @@ int main() {
 
         std::thread botThread([&]() {
             botCoordinator.run(sync);
+        });
+
+        std::thread monitorThread([&]() {
+            monitor.run(sync);
         });
 
         std::thread guiThread([&]() {

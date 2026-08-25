@@ -52,6 +52,14 @@ struct RisultatoBotTask {
 };
 
 
+struct StatoMonitor {
+    Colore turno;
+    std::string ultimaMossa;
+    StatoPartita statoPartita;
+    std::string vincitore;
+};
+
+
 struct SyncContext {
 
     // GUI --> Game
@@ -85,7 +93,10 @@ struct SyncContext {
     std::mutex resultMutex;
     sem_t resultReady;
 
-
+    // Game --> monitor
+    std::queue<StatoMonitor> monitorQueue;
+    std::mutex monitorMutex;
+    sem_t monitorReady;
 
 
 
@@ -97,6 +108,7 @@ struct SyncContext {
         sem_init(&botMoveReady, 0, 0);
         sem_init(&taskReady, 0, 0);
         sem_init(&resultReady, 0, 0);
+        sem_init(&monitorReady, 0, 0);
     }
 
     ~SyncContext() {
@@ -105,6 +117,7 @@ struct SyncContext {
         sem_destroy(&botMoveReady);
         sem_destroy(&taskReady);
         sem_destroy(&resultReady);
+        sem_destroy(&monitorReady);
     }
 };
 

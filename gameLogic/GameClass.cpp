@@ -8,7 +8,7 @@
 #include <stdexcept>
 
 
-
+bool DEBUG_GAMECLASS = false;
 
 Game::Game(Scacchiera& scacchiera, ConfigurazioneGiocatori configurazione) : scacchiera(scacchiera), tipoBianco(configurazione.bianco), tipoNero(configurazione.nero) {
     if (tipoBianco == TipoGiocatore::BOT)
@@ -59,12 +59,14 @@ std::vector<std::string> Game::processaMossa(const std::string& mossaStringa) {
 
     std::vector<Pezzo*>& pezziPersi = (turno == g1) ? pezziPersiB : pezziPersiW;
 
-    std::cout << "[DEBUG] parametri: "
-              << nomeStringa << " "
-              << srcStringa << " "
-              << destStringa << " "
-              << (turno == Colore::WHITE ? "WHITE" : "BLACK")
-              << "\n";
+    if (DEBUG_GAMECLASS){
+        std::cout << "[DEBUG] parametri: "
+                << nomeStringa << " "
+                << srcStringa << " "
+                << destStringa << " "
+                << (turno == Colore::WHITE ? "WHITE" : "BLACK")
+                << "\n";
+    }
 
     std::vector<std::string> res = muovi(scacchiera, nome, csrc, cdest, turno, pezziPersi);
 
@@ -79,7 +81,7 @@ std::vector<std::string> Game::processaMossa(const std::string& mossaStringa) {
         file << "\"" << mossaStringa << "\",\n";
     }
 
-    std::cout << "DEBUG: CAMBIO TURNO\n";
+    //std::cout << "DEBUG: CAMBIO TURNO\n";
 
     turno = (turno == g1) ? g2 : g1;
 
@@ -226,6 +228,8 @@ std::string Game::getVincitore() const {
 void Game::run(SyncContext& sync) {
     while (sync.running) {
 
+        std::string stringaMossa;
+
         if (isBot(turno)) {
 
             RichiestaBot richiesta{
@@ -252,6 +256,10 @@ void Game::run(SyncContext& sync) {
                 std::lock_guard<std::mutex> lock(sync.botOutputMutex);
                 mossa = sync.rispostaBot;
             }
+            
+            // Creo stringa solo per il monitor
+            std::vector<Posizione> movimento = {mossa.src, mossa.dest};
+            stringaMossa = creaStringa(movimento, scacchiera);
 
             eseguiMossaBot(mossa);
 
@@ -271,7 +279,7 @@ void Game::run(SyncContext& sync) {
             }
 
             std::vector<Posizione> movimento = {comando.src, comando.dest};
-            std::string stringaMossa = creaStringa(movimento, scacchiera);
+            stringaMossa = creaStringa(movimento, scacchiera);
 
             eseguiMossa(stringaMossa);
         }
@@ -293,6 +301,20 @@ void Game::run(SyncContext& sync) {
             sync.ultimoEventoGUI = std::move(evento);
             sync.guiUpdateDisponibile = true;
         }
+
+        StatoMonitor stato{
+            turno,
+            stringaMossa,
+            statoPartita,
+            getVincitore()
+        };
+
+        {
+            std::lock_guard<std::mutex> lock(sync.monitorMutex);
+            sync.monitorQueue.push(std::move(stato));
+        }
+
+        sem_post(&sync.monitorReady);
     }
 }
 

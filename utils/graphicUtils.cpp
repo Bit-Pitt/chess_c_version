@@ -107,7 +107,6 @@ std::string creaStringa(const std::vector<Posizione>& mossa, Scacchiera& scacchi
     stringa += " ";
     stringa += stringDest;
 
-    std::cout << "[DEBUG] " << stringa << std::endl;
 
     return stringa;
 }
